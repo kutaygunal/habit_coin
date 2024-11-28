@@ -476,6 +476,39 @@ def upload_profile_photo():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route('/get_habit_data/<int:habit_id>/<int:year>/<int:month>')
+@login_required
+def get_habit_data(habit_id, year, month):
+    try:
+        # Verify that the habit belongs to the current user
+        habit = Habit.query.filter_by(id=habit_id, user_id=current_user.id).first_or_404()
+        
+        # Get the first and last day of the requested month
+        _, num_days = monthrange(year, month)
+        month_start = datetime(year, month, 1).date()
+        month_end = datetime(year, month, num_days).date()
+        
+        # Get habit logs for the specified month
+        habit_logs = HabitLog.query.filter(
+            HabitLog.habit_id == habit_id,
+            HabitLog.date >= month_start,
+            HabitLog.date <= month_end
+        ).all()
+        
+        # Convert completed dates to string format
+        completed_dates = [log.date.isoformat() for log in habit_logs if log.completed]
+        
+        return jsonify({
+            'success': True,
+            'completed_dates': completed_dates
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.context_processor
 def inject_theme():
     return dict(theme='light')

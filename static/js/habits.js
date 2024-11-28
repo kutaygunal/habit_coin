@@ -129,6 +129,128 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Month Navigation
+    function initializeMonthNavigation() {
+        document.querySelectorAll('.habit-tracker').forEach(tracker => {
+            const prevButton = tracker.querySelector('.prev-month');
+            const nextButton = tracker.querySelector('.next-month');
+            const monthDisplay = tracker.querySelector('.month-display');
+            const monthGrid = tracker.querySelector('.month-grid');
+            const habitId = tracker.dataset.habitId;
+
+            prevButton.addEventListener('click', () => navigateMonth(tracker, -1));
+            nextButton.addEventListener('click', () => navigateMonth(tracker, 1));
+        });
+    }
+
+    function navigateMonth(tracker, direction) {
+        const currentMonth = parseInt(tracker.dataset.currentMonth);
+        const currentYear = parseInt(tracker.dataset.currentYear);
+        
+        let newMonth = currentMonth + direction;
+        let newYear = currentYear;
+
+        if (newMonth > 12) {
+            newMonth = 1;
+            newYear++;
+        } else if (newMonth < 1) {
+            newMonth = 12;
+            newYear--;
+        }
+
+        // Update data attributes
+        tracker.dataset.currentMonth = newMonth;
+        tracker.dataset.currentYear = newYear;
+
+        // Update month display
+        const date = new Date(newYear, newMonth - 1, 1);
+        const monthDisplay = tracker.querySelector('.month-display');
+        monthDisplay.textContent = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+        // Fetch and update habit data for the new month
+        const habitId = tracker.dataset.habitId;
+        fetch(`/get_habit_data/${habitId}/${newYear}/${newMonth}`)
+            .then(response => response.json())
+            .then(data => {
+                updateMonthGrid(tracker, data, date);
+            })
+            .catch(error => console.error('Error fetching habit data:', error));
+    }
+
+    function updateMonthGrid(tracker, habitData, date) {
+        const monthGrid = tracker.querySelector('.month-grid');
+        monthGrid.innerHTML = ''; // Clear existing grid
+
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        const startPadding = (firstDay.getDay() + 6) % 7; // Convert to Sunday start
+
+        // Add empty spaces for padding
+        for (let i = 0; i < startPadding; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'day-circle empty';
+            monthGrid.appendChild(emptyDiv);
+        }
+
+        // Add days of the month
+        const today = new Date();
+        for (let day = 1; day <= lastDay.getDate(); day++) {
+            const currentDate = new Date(date.getFullYear(), date.getMonth(), day);
+            const dateStr = currentDate.toISOString().split('T')[0];
+            
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day-circle';
+            dayDiv.dataset.date = dateStr;
+
+            // Add active class if date is today or in the past
+            if (currentDate <= today) {
+                dayDiv.classList.add('active');
+            }
+
+            // Add checked class if habit was completed on this date
+            if (habitData.completed_dates && habitData.completed_dates.includes(dateStr)) {
+                dayDiv.classList.add('checked');
+            }
+
+            const dayNumber = document.createElement('span');
+            dayNumber.className = 'day-number';
+            dayNumber.textContent = day;
+            dayDiv.appendChild(dayNumber);
+
+            // Add click event listener
+            if (currentDate <= today) {
+                dayDiv.addEventListener('click', function() {
+                    const habitTracker = this.closest('.habit-tracker');
+                    const habitId = habitTracker.dataset.habitId;
+                    
+                    fetch('/toggle_habit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            habit_id: habitId,
+                            date: dateStr
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            this.classList.toggle('checked');
+                            updateStreakCount(habitTracker);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            }
+
+            monthGrid.appendChild(dayDiv);
+        }
+    }
+
+    // Initialize month navigation
+    initializeMonthNavigation();
+
     // Handle delete button clicks
     const deleteButtons = document.querySelectorAll('.delete-btn');
     console.log('Found delete buttons:', deleteButtons.length);

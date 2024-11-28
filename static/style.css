@@ -150,6 +150,10 @@ body {
 .month-header {
     margin-bottom: 0.5rem;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.5rem;
 }
 
 .month-header h4 {
@@ -158,6 +162,34 @@ body {
     color: var(--text-primary);
     margin: 0;
     padding: 0.25rem;
+    flex: 1;
+}
+
+.month-nav {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.month-nav:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+    transform: scale(1.1);
+}
+
+.month-nav:active {
+    transform: scale(0.95);
+}
+
+.month-nav i {
+    font-size: 0.9rem;
 }
 
 .weekday-header {

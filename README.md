@@ -42,6 +42,12 @@ A modern web application for tracking daily habits and building consistent routi
 - Maximum file size: 1MB
 - Automatic image optimization
 
+### Month Navigation
+- Navigate through different months in the habit tracker
+- View past and future habit completion data
+- Dynamic month display with clickable arrows
+- Updated calendar grid reflecting selected month's data
+
 ### AI-Powered Features
 - Integration with Ollama LLM for generating habit descriptions
 - Local model: `smollm2:1.7b-instruct-q4_0`

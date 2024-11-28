@@ -55,9 +55,11 @@
                 <p class="habit-description">{{ habit.description }}</p>
                 {% endif %}
                 
-                <div class="habit-tracker" data-habit-id="{{ habit.id }}">
+                <div class="habit-tracker" data-habit-id="{{ habit.id }}" data-current-month="{{ today.month }}" data-current-year="{{ today.year }}">
                     <div class="month-header">
-                        <h4>{{ today.strftime('%B %Y') }}</h4>
+                        <button class="month-nav prev-month"><i class="fas fa-chevron-left"></i></button>
+                        <h4 class="month-display">{{ today.strftime('%B %Y') }}</h4>
+                        <button class="month-nav next-month"><i class="fas fa-chevron-right"></i></button>
                     </div>
                     <div class="weekday-header">
                         <div class="weekday">Sun</div>
