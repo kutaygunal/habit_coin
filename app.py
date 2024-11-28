@@ -60,5 +60,24 @@ def toggle_habit():
     db.session.commit()
     return jsonify({'success': True})
 
+@app.route('/habit_status/<int:habit_id>')
+def habit_status(habit_id):
+    habit_logs = HabitLog.query.filter_by(habit_id=habit_id).all()
+    completions = [{'date': log.date.strftime('%Y-%m-%d'), 'completed': log.completed} for log in habit_logs]
+    return jsonify({'completions': completions})
+
+@app.route('/delete_habit/<int:habit_id>', methods=['DELETE'])
+def delete_habit(habit_id):
+    habit = Habit.query.get_or_404(habit_id)
+    
+    # Delete associated logs first
+    HabitLog.query.filter_by(habit_id=habit_id).delete()
+    
+    # Delete the habit
+    db.session.delete(habit)
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
 if __name__ == '__main__':
     app.run(debug=True)
