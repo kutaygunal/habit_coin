@@ -7,9 +7,16 @@
         <div class="add-habit-section">
             <form action="{{ url_for('add_habit') }}" method="POST" class="add-habit-form">
                 <div class="input-group">
-                    <input type="text" class="form-control" name="name" id="habit-input" 
-                           placeholder="What habit would you like to track?" required 
-                           autocomplete="off">
+                    <div class="habit-wrapper">
+                        <input type="text" class="form-control" name="name" id="habit-input" 
+                               placeholder="What habit would you like to track?" required 
+                               autocomplete="off">
+                        <div class="habit-dropdown">
+                            <div class="dropdown-items">
+                                <!-- Predefined habits will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
                     <div class="description-wrapper">
                         <input type="text" class="form-control" name="description" id="habit-description" 
                                placeholder="Add a description (optional)"

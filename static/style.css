@@ -758,6 +758,50 @@ body {
     to { transform: rotate(360deg); }
 }
 
+.habit-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.habit-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 2px;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.habit-dropdown .dropdown-items {
+    padding: 8px 0;
+}
+
+.habit-dropdown .dropdown-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.habit-dropdown .dropdown-item:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+    color: var(--primary-color);
+}
+
+.habit-wrapper .form-control:focus + .habit-dropdown,
+.habit-dropdown:hover {
+    display: block;
+}
+
 @media (max-width: 768px) {
     .add-habit-form .input-group {
         flex-direction: column;

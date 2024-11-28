@@ -9,6 +9,12 @@ from werkzeug.utils import secure_filename
 import uuid
 import time
 from calendar import monthrange
+import requests
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///habits.db'
@@ -55,6 +61,53 @@ class HabitLog(db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# Ollama API endpoint
+OLLAMA_API_URL = "http://localhost:11434/api/generate"
+
+@app.route('/generate_description', methods=['POST'])
+@login_required
+def generate_description():
+    logger.info('Generate description endpoint called')
+    
+    habit_name = request.json.get('habit_name')
+    logger.info(f'Received habit name: {habit_name}')
+    
+    if not habit_name:
+        logger.warning('No habit name provided in request')
+        return jsonify({'error': 'Habit name is required'}), 400
+    
+    try:
+        # Prepare the prompt for the model
+        prompt = f"Generate a concise and motivating description for a habit named '{habit_name}'. Keep it under 50 characters."
+        logger.info(f'Generated prompt: {prompt}')
+        
+        # Call Ollama API
+        logger.info(f'Making request to Ollama API at {OLLAMA_API_URL}')
+        response = requests.post(OLLAMA_API_URL, json={
+            'model': 'smollm2:1.7b-instruct-q4_0',
+            'prompt': prompt,
+            'stream': False
+        })
+        
+        logger.info(f'Ollama API response status code: {response.status_code}')
+        
+        if response.status_code == 200:
+            result = response.json()
+            logger.info(f'Ollama API response: {result}')
+            description = result.get('response', '').strip()
+            logger.info(f'Generated description: {description}')
+            return jsonify({'description': description})
+        else:
+            logger.error(f'Ollama API error: {response.text}')
+            return jsonify({'error': 'Failed to generate description'}), 500
+            
+    except requests.exceptions.ConnectionError as e:
+        logger.error(f'Connection error to Ollama API: {str(e)}')
+        return jsonify({'error': 'Could not connect to Ollama. Make sure Ollama is running.'}), 500
+    except Exception as e:
+        logger.error(f'Unexpected error generating description: {str(e)}')
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
