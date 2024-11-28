@@ -35,7 +35,6 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(120), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     email_notifications = db.Column(db.Boolean, default=True)
-    theme = db.Column(db.String(20), default='light')
     profile_photo = db.Column(db.String(255), default='default.png')
     habits = db.relationship('Habit', backref='user', lazy=True)
 
@@ -303,30 +302,15 @@ def change_password():
 @app.route('/update_settings', methods=['POST'])
 @login_required
 def update_settings():
-    theme = request.form.get('theme', 'light')
     email_notifications = 'email_notifications' in request.form
     
     try:
-        current_user.theme = theme
         current_user.email_notifications = email_notifications
         db.session.commit()
         flash('Settings updated successfully!', 'success')
     except Exception as e:
         flash('Failed to update settings. Please try again.', 'danger')
         
-    return redirect(url_for('profile'))
-
-@app.route('/update_preferences', methods=['POST'])
-@login_required
-def update_preferences():
-    email_notifications = request.form.get('email_notifications') == 'on'
-    theme = request.form.get('theme', 'light')
-    
-    current_user.email_notifications = email_notifications
-    current_user.theme = theme
-    db.session.commit()
-    
-    flash('Preferences updated successfully!', 'success')
     return redirect(url_for('profile'))
 
 @app.route('/delete_account', methods=['POST'])
@@ -398,11 +382,7 @@ def upload_profile_photo():
 
 @app.context_processor
 def inject_theme():
-    if current_user.is_authenticated:
-        theme = current_user.theme or 'light'
-    else:
-        theme = 'light'
-    return dict(theme=theme)
+    return dict(theme='light')
 
 with app.app_context():
     db.create_all()

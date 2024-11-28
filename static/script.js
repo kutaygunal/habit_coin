@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize habit autocomplete
+    initializeHabitAutocomplete();
+
     // Initialize checkboxes based on database state
     updateHabitDisplay();
 
@@ -145,4 +148,79 @@ function updateStreakCount(habitId) {
             streakCount.classList.remove('updating');
         }, 200);
     }
+}
+
+async function initializeHabitAutocomplete() {
+    const habitInput = document.querySelector('#habit-input');
+    if (!habitInput) return;
+
+    // Create and style the dropdown
+    const dropdown = document.createElement('div');
+    dropdown.className = 'habit-suggestions';
+    dropdown.style.display = 'none';
+    dropdown.style.position = 'absolute';
+    dropdown.style.width = habitInput.offsetWidth + 'px';
+    dropdown.style.maxHeight = '200px';
+    dropdown.style.overflowY = 'auto';
+    dropdown.style.backgroundColor = 'white';
+    dropdown.style.border = '1px solid #ddd';
+    dropdown.style.borderRadius = '4px';
+    dropdown.style.zIndex = '1000';
+    habitInput.parentNode.style.position = 'relative';
+    habitInput.parentNode.appendChild(dropdown);
+
+    // Fetch predefined habits
+    let predefinedHabits = [];
+    try {
+        const response = await fetch('/static/predefined_habits.txt');
+        const text = await response.text();
+        predefinedHabits = text.split('\n').filter(habit => habit.trim());
+    } catch (error) {
+        console.error('Error loading predefined habits:', error);
+    }
+
+    habitInput.addEventListener('input', function() {
+        const value = this.value.toLowerCase();
+        if (!value) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        // Filter matching habits
+        const matches = predefinedHabits.filter(habit => 
+            habit.toLowerCase().includes(value)
+        );
+
+        if (matches.length > 0) {
+            dropdown.innerHTML = matches
+                .map(habit => `<div class="suggestion-item">${habit}</div>`)
+                .join('');
+            dropdown.style.display = 'block';
+
+            // Add click handlers to suggestions
+            dropdown.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    habitInput.value = this.textContent;
+                    dropdown.style.display = 'none';
+                });
+                item.style.padding = '8px 12px';
+                item.style.cursor = 'pointer';
+                item.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = '#f0f0f0';
+                });
+                item.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = 'white';
+                });
+            });
+        } else {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Hide dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!habitInput.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
 }
