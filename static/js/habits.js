@@ -42,17 +42,58 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to count streaks
     function updateStreakCount(habitTracker) {
-        const circles = habitTracker.querySelectorAll('.day-circle');
-        const streakCountElement = habitTracker.closest('.habit-card').querySelector('.streak-count');
-        let streakCount = 0;
+        const habitId = habitTracker.dataset.habitId;
+        const currentMonth = parseInt(habitTracker.dataset.currentMonth);
+        const currentYear = parseInt(habitTracker.dataset.currentYear);
         
-        circles.forEach(circle => {
-            if (circle.classList.contains('active') && circle.classList.contains('checked')) {
-                streakCount++;
+        // Fetch data for current month and adjacent months
+        Promise.all([
+            fetch(`/get_habit_data/${habitId}/${currentYear}/${currentMonth}`).then(r => r.json()),
+            fetch(`/get_habit_data/${habitId}/${currentYear}/${currentMonth - 1 || 12}`).then(r => r.json()),
+            fetch(`/get_habit_data/${habitId}/${currentYear}/${currentMonth + 1 > 12 ? 1 : currentMonth + 1}`).then(r => r.json())
+        ]).then(([currentData, prevData, nextData]) => {
+            // Combine all completed dates
+            const allDates = [
+                ...prevData.completed_dates,
+                ...currentData.completed_dates,
+                ...nextData.completed_dates
+            ].map(dateStr => new Date(dateStr));
+            
+            // Sort dates in descending order
+            allDates.sort((a, b) => b - a);
+            
+            let streak = 0;
+            if (allDates.length > 0) {
+                streak = 1; // Start with 1 for the most recent date
+                
+                for (let i = 0; i < allDates.length - 1; i++) {
+                    const currentDate = allDates[i];
+                    const nextDate = allDates[i + 1];
+                    
+                    // Calculate the difference in days
+                    const diffTime = Math.abs(currentDate - nextDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    if (diffDays === 1) {
+                        streak++;
+                    } else {
+                        break;
+                    }
+                }
             }
-        });
-        
-        streakCountElement.textContent = streakCount;
+            
+            // Update streak count with animation
+            const streakCountElement = habitTracker.closest('.habit-card').querySelector('.streak-count');
+            const currentStreak = parseInt(streakCountElement.textContent);
+            
+            if (currentStreak !== streak) {
+                streakCountElement.classList.add('updating');
+                setTimeout(() => {
+                    streakCountElement.textContent = streak;
+                    streakCountElement.classList.remove('updating');
+                }, 200);
+            }
+        }).catch(error => console.error('Error updating streak:', error));
     }
 
     // Initialize streak counts for all habits
@@ -246,6 +287,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             monthGrid.appendChild(dayDiv);
         }
+        
+        // Update streak count after updating the grid
+        updateStreakCount(tracker);
     }
 
     // Initialize month navigation

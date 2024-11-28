@@ -126,18 +126,48 @@ function updateStreakCount(habitId) {
     const card = tracker.closest('.habit-card');
     const streakCount = card.querySelector('.streak-count');
     
-    // Count consecutive completed days
-    let streak = 0;
-    const checkboxes = Array.from(tracker.querySelectorAll('.checkbox'));
+    // Get all completed dates and sort them
+    const completedElements = Array.from(tracker.querySelectorAll('.day-circle.checked'));
+    console.log('Found completed elements:', completedElements);
     
-    // Count from most recent day
-    for (let i = checkboxes.length - 1; i >= 0; i--) {
-        if (checkboxes[i].classList.contains('completed')) {
-            streak++;
-        } else {
-            break;
+    const completedDates = completedElements
+        .map(element => {
+            const dateStr = element.dataset.date;
+            console.log('Processing date:', dateStr);
+            return new Date(dateStr);
+        })
+        .sort((a, b) => b - a); // Sort in descending order (most recent first)
+    
+    console.log('Sorted completed dates:', completedDates);
+    
+    let streak = 0;
+    if (completedDates.length > 0) {
+        streak = 1; // Start with 1 for the most recent date
+        for (let i = 0; i < completedDates.length - 1; i++) {
+            const currentDate = completedDates[i];
+            const nextDate = completedDates[i + 1];
+            
+            // Calculate the difference in days
+            const diffTime = Math.abs(currentDate - nextDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            console.log('Comparing dates:', {
+                current: currentDate.toISOString(),
+                next: nextDate.toISOString(),
+                diffDays: diffDays
+            });
+            
+            if (diffDays === 1) {
+                streak++;
+                console.log('Streak increased to:', streak);
+            } else {
+                console.log('Streak broken, gap of', diffDays, 'days');
+                break;
+            }
         }
     }
+    
+    console.log('Final streak:', streak);
     
     // Update streak count with animation
     const currentStreak = parseInt(streakCount.textContent);
