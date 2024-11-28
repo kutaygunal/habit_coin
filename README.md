@@ -31,6 +31,16 @@ A modern web application for tracking daily habits and building consistent routi
 - Account management
   * View join date
   * Delete account option
+- Interactive profile photo upload
+- Real-time image cropping with Cropper.js
+- Circular photo display
+- Image manipulation features:
+  - Zoom in/out
+  - Rotation controls
+  - Drag to position
+- Supported formats: PNG, JPG, JPEG, GIF
+- Maximum file size: 1MB
+- Automatic image optimization
 
 ### Security Features
 - Password hashing with bcrypt
@@ -38,6 +48,10 @@ A modern web application for tracking daily habits and building consistent routi
 - CSRF protection
 - Secure session management
 - User-specific data access
+- Secure file uploads
+- User data isolation
+- Input validation
+- Error handling
 
 ## Technologies Used
 
@@ -55,6 +69,7 @@ A modern web application for tracking daily habits and building consistent routi
 - JavaScript
 - Bootstrap 5
 - Font Awesome icons
+- Cropper.js for image processing
 
 ## Installation
 
@@ -96,6 +111,7 @@ python-dotenv==1.0.0
 Flask-Login==0.6.3
 Flask-Bcrypt==1.0.1
 email-validator==2.1.0.post1
+Werkzeug==2.3.3
 ```
 
 ## Project Structure
@@ -107,7 +123,8 @@ HabitCoin/
 ├── requirements.txt      # Project dependencies
 ├── static/
 │   ├── style.css        # CSS styles
-│   └── script.js        # JavaScript functions
+│   ├── script.js        # JavaScript functions
+│   └── profile_photos/  # User profile photos
 ├── templates/
 │   ├── index.html       # Main habit tracking page
 │   ├── login.html       # Login page
@@ -127,6 +144,7 @@ HabitCoin/
 - email_notifications
 - theme
 - habits (relationship)
+- profile_photo
 
 ### Habit
 - id (Primary Key)
