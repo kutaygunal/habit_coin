@@ -7,8 +7,19 @@
         <div class="add-habit-section">
             <form action="{{ url_for('add_habit') }}" method="POST" class="add-habit-form">
                 <div class="input-group">
-                    <input type="text" class="form-control" name="name" id="habit-input" placeholder="What habit would you like to track?" required>
-                    <input type="text" class="form-control" name="description" placeholder="Add a description (optional)">
+                    <input type="text" class="form-control" name="name" id="habit-input" 
+                           placeholder="What habit would you like to track?" required 
+                           autocomplete="off">
+                    <div class="description-wrapper">
+                        <input type="text" class="form-control" name="description" id="habit-description" 
+                               placeholder="Add a description (optional)"
+                               autocomplete="off">
+                        <div class="description-dropdown">
+                            <div class="dropdown-item" id="generate-description">
+                                <i class="fas fa-magic"></i> Generate
+                            </div>
+                        </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-plus"></i> Add Habit
                     </button>
