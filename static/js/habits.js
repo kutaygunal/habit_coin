@@ -326,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function initializeGenerateButton() {
     const generateBtn = document.getElementById('generate-description');
     const descriptionInput = document.getElementById('habit-description');
+    const descriptionWrapper = document.querySelector('.description-wrapper');
     
     if (generateBtn && descriptionInput) {
         console.log('Generate button and description input found');
@@ -343,11 +344,12 @@ function initializeGenerateButton() {
             // Store original button content
             const originalContent = generateBtn.innerHTML;
             
-            // Update button to loading state
+            // Update button to loading state and start rainbow animation
             generateBtn.classList.add('loading');
             generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
             generateBtn.style.pointerEvents = 'none';
             descriptionInput.disabled = true;
+            descriptionWrapper.classList.add('rainbow-animation');
             
             try {
                 console.log('Making API request to /generate_description');
@@ -374,12 +376,13 @@ function initializeGenerateButton() {
                 console.error('Fetch error:', error);
                 alert('Failed to generate description. Please try again.');
             } finally {
-                // Reset button state
+                // Reset button state and stop rainbow animation
                 console.log('Resetting generate button state');
                 generateBtn.classList.remove('loading');
                 generateBtn.innerHTML = originalContent;
                 generateBtn.style.pointerEvents = 'auto';
                 descriptionInput.disabled = false;
+                descriptionWrapper.classList.remove('rainbow-animation');
             }
         });
     } else {

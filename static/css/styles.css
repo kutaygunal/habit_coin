@@ -28,3 +28,70 @@ input:disabled {
     background-color: #f8f9fa;
     cursor: not-allowed;
 }
+
+/* Rainbow animation styles for the description input box */
+.description-wrapper {
+    position: relative;
+    border-radius: 8px;
+    padding: 2px;
+    background: white;
+    border: 1px solid #ced4da;
+}
+
+.rainbow-animation {
+    border: none;
+    background: linear-gradient(
+        45deg,
+        #ff0000,
+        #ff7300,
+        #fffb00,
+        #48ff00,
+        #00ffd5,
+        #002bff,
+        #7a00ff,
+        #ff00c8,
+        #ff0000
+    );
+    background-size: 400%;
+    animation: rainbow 8s linear infinite;
+}
+
+.rainbow-animation::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    z-index: -1;
+    background: inherit;
+    border-radius: 10px;
+    filter: blur(10px);
+    opacity: 0.5;
+    animation: rainbow 8s linear infinite;
+}
+
+.description-wrapper input {
+    background: white;
+    border: none !important;
+    border-radius: 6px;
+    margin: 0;
+    width: 100%;
+    box-shadow: none !important;
+}
+
+.description-wrapper input:focus {
+    box-shadow: none !important;
+}
+
+@keyframes rainbow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
