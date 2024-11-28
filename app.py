@@ -36,7 +36,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     email_notifications = db.Column(db.Boolean, default=True)
     theme = db.Column(db.String(20), default='light')
-    profile_photo = db.Column(db.String(200), default='default.png')
+    profile_photo = db.Column(db.String(255), default='default.png')
     habits = db.relationship('Habit', backref='user', lazy=True)
 
 class Habit(db.Model):
@@ -300,6 +300,22 @@ def change_password():
     flash('Password changed successfully!', 'success')
     return redirect(url_for('profile'))
 
+@app.route('/update_settings', methods=['POST'])
+@login_required
+def update_settings():
+    theme = request.form.get('theme', 'light')
+    email_notifications = 'email_notifications' in request.form
+    
+    try:
+        current_user.theme = theme
+        current_user.email_notifications = email_notifications
+        db.session.commit()
+        flash('Settings updated successfully!', 'success')
+    except Exception as e:
+        flash('Failed to update settings. Please try again.', 'danger')
+        
+    return redirect(url_for('profile'))
+
 @app.route('/update_preferences', methods=['POST'])
 @login_required
 def update_preferences():
@@ -379,6 +395,14 @@ def upload_profile_photo():
         
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.context_processor
+def inject_theme():
+    if current_user.is_authenticated:
+        theme = current_user.theme or 'light'
+    else:
+        theme = 'light'
+    return dict(theme=theme)
 
 with app.app_context():
     db.create_all()

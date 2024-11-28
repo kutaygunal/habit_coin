@@ -87,7 +87,7 @@
             <!-- Profile Settings -->
             <div class="col-md-8">
                 <div class="profile-settings">
-                    <h2>Profile Settings</h2>
+                    <h2>Settings</h2>
                     
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
@@ -136,14 +136,41 @@
                             <input type="checkbox" class="form-check-input" id="email_notifications" name="email_notifications" {% if current_user.email_notifications %}checked{% endif %}>
                             <label class="form-check-label" for="email_notifications">Email Notifications</label>
                         </div>
-                        <div class="mb-3">
-                            <label for="theme" class="form-label">Theme</label>
-                            <select class="form-select" id="theme" name="theme">
-                                <option value="light" {% if current_user.theme == 'light' %}selected{% endif %}>Light</option>
-                                <option value="dark" {% if current_user.theme == 'dark' %}selected{% endif %}>Dark</option>
-                            </select>
-                        </div>
                         <button type="submit" class="btn btn-primary">Save Preferences</button>
+                    </form>
+
+                    <form method="POST" action="{{ url_for('update_settings') }}">
+                        <div class="form-group mb-3">
+                            <label class="form-label">Theme</label>
+                            <div class="theme-toggle">
+                                <input type="radio" id="light" name="theme" value="light" 
+                                       {% if current_user.theme == 'light' %}checked{% endif %}>
+                                <label for="light" class="theme-option">
+                                    <i class="fas fa-sun"></i>
+                                    Light
+                                </label>
+                                
+                                <input type="radio" id="dark" name="theme" value="dark"
+                                       {% if current_user.theme == 'dark' %}checked{% endif %}>
+                                <label for="dark" class="theme-option">
+                                    <i class="fas fa-moon"></i>
+                                    Dark
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label class="form-check-label">
+                                <input type="checkbox" name="email_notifications" class="form-check-input"
+                                       {% if current_user.email_notifications %}checked{% endif %}>
+                                Email Notifications
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            Save Settings
+                        </button>
                     </form>
 
                     <!-- Danger Zone -->
@@ -169,16 +196,16 @@
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to delete your account? This action cannot be undone.</p>
-                    <form method="POST" action="{{ url_for('delete_account') }}">
+                    <form id="delete-account-form" method="POST" action="{{ url_for('delete_account') }}">
                         <div class="mb-3">
                             <label for="delete_confirmation" class="form-label">Type your password to confirm:</label>
                             <input type="password" class="form-control" id="delete_confirmation" name="password" required>
                         </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Delete Account</button>
+                        </div>
                     </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" form="delete-account-form" class="btn btn-danger">Delete Account</button>
                 </div>
             </div>
         </div>
