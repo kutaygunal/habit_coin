@@ -367,9 +367,17 @@ body {
     color: #075985;
 }
 
-/* Add logout button to navbar */
+/* Navbar styling */
 .navbar-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
     margin-left: auto;
+}
+
+.nav-item {
+    margin: 0;
 }
 
 .nav-link {
@@ -377,9 +385,16 @@ body {
     transition: all 0.2s ease;
     padding: 0.5rem 1rem;
     border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
 }
 
 .nav-link:hover {
+    color: var(--primary-color);
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+.nav-link.active {
     color: var(--primary-color);
     background-color: rgba(99, 102, 241, 0.1);
 }
