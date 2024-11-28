@@ -1,195 +1,102 @@
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Content Loaded - Starting habits.js');
-    
-    // Initialize generate button functionality
-    initializeGenerateButton();
-    
-    // Load predefined habits
-    const habitInput = document.getElementById('habit-input');
-    const dropdownItems = document.querySelector('.habit-dropdown .dropdown-items');
-    
-    if (habitInput && dropdownItems) {
-        fetch('/static/predefined_habits.txt')
-            .then(response => response.text())
-            .then(text => {
-                const habits = text.split('\n').filter(habit => habit.trim() !== '');
-                
-                // Create dropdown items
-                habits.forEach(habit => {
-                    const item = document.createElement('div');
-                    item.className = 'dropdown-item';
-                    item.textContent = habit;
-                    item.addEventListener('click', () => {
-                        habitInput.value = habit;
-                        habitInput.blur(); // This will unfocus the input and hide the dropdown
-                    });
-                    dropdownItems.appendChild(item);
-                });
-                
-                // Filter items on input
-                habitInput.addEventListener('input', () => {
-                    const filter = habitInput.value.toLowerCase();
-                    const items = dropdownItems.getElementsByClassName('dropdown-item');
-                    
-                    Array.from(items).forEach(item => {
-                        const text = item.textContent;
-                        item.style.display = text.toLowerCase().includes(filter) ? '' : 'none';
-                    });
-                });
-            })
-            .catch(error => console.error('Error loading predefined habits:', error));
-    }
-
-    // Function to count streaks
-    function updateStreakCount(habitTracker) {
-        const habitId = habitTracker.dataset.habitId;
-        const currentMonth = parseInt(habitTracker.dataset.currentMonth);
-        const currentYear = parseInt(habitTracker.dataset.currentYear);
-        
-        // Fetch data for current month and adjacent months
-        Promise.all([
-            fetch(`/get_habit_data/${habitId}/${currentYear}/${currentMonth}`).then(r => r.json()),
-            fetch(`/get_habit_data/${habitId}/${currentYear}/${currentMonth - 1 || 12}`).then(r => r.json()),
-            fetch(`/get_habit_data/${habitId}/${currentYear}/${currentMonth + 1 > 12 ? 1 : currentMonth + 1}`).then(r => r.json())
-        ]).then(([currentData, prevData, nextData]) => {
-            // Combine all completed dates
-            const allDates = [
-                ...prevData.completed_dates,
-                ...currentData.completed_dates,
-                ...nextData.completed_dates
-            ].map(dateStr => new Date(dateStr));
-            
-            // Sort dates in descending order
-            allDates.sort((a, b) => b - a);
-            
-            let streak = 0;
-            if (allDates.length > 0) {
-                streak = 1; // Start with 1 for the most recent date
-                
-                for (let i = 0; i < allDates.length - 1; i++) {
-                    const currentDate = allDates[i];
-                    const nextDate = allDates[i + 1];
-                    
-                    // Calculate the difference in days
-                    const diffTime = Math.abs(currentDate - nextDate);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays === 1) {
-                        streak++;
-                    } else {
-                        break;
-                    }
-                }
-            }
-            
-            // Update streak count with animation
-            const streakCountElement = habitTracker.closest('.habit-card').querySelector('.streak-count');
-            const currentStreak = parseInt(streakCountElement.textContent);
-            
-            if (currentStreak !== streak) {
-                streakCountElement.classList.add('updating');
-                setTimeout(() => {
-                    streakCountElement.textContent = streak;
-                    streakCountElement.classList.remove('updating');
-                }, 200);
-            }
-        }).catch(error => console.error('Error updating streak:', error));
-    }
-
-    // Initialize streak counts for all habits
-    document.querySelectorAll('.habit-tracker').forEach(habitTracker => {
-        updateStreakCount(habitTracker);
-    });
-    
-    // Select all day circles
-    const circles = document.querySelectorAll('.day-circle');
-    console.log('Found circles:', circles.length);
-    
-    if (circles.length === 0) {
-        console.error('No circles found! Check if the class name is correct.');
-        return;
-    }
-
-    // Add click event listener to each circle
-    circles.forEach((circle, index) => {
-        console.log(`Adding click listener to circle ${index}`);
-        
-        circle.addEventListener('click', function(e) {
-            console.log(`Circle ${index} clicked!`);
-            
-            // Only proceed if the circle is active
-            if (!this.classList.contains('active')) {
-                console.log('Circle is not active');
-                return;
-            }
-
-            const habitTracker = this.closest('.habit-tracker');
-            console.log('Habit tracker:', habitTracker);
-            
-            if (!habitTracker) {
-                console.error('Could not find habit tracker');
-                return;
-            }
-            
-            const habitId = habitTracker.dataset.habitId;
-            const date = this.dataset.date;
-            
-            console.log('Processing click:', { habitId, date });
-            
-            // Update in database
-            fetch('/toggle_habit', {
+// API Service for handling all HTTP requests
+class HabitAPI {
+    static async toggleHabit(habitId, date) {
+        try {
+            const response = await fetch('/toggle_habit', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    habit_id: habitId,
-                    date: date
-                })
-            })
-            .then(response => {
-                console.log('Response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('Server response:', data);
-                if (data.success) {
-                    // Toggle the checked state based on server response
-                    if (data.completed) {
-                        this.classList.add('checked');
-                    } else {
-                        this.classList.remove('checked');
-                    }
-                    // Update streak count after successful toggle
-                    updateStreakCount(habitTracker);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ habit_id: habitId, date })
             });
-        });
-    });
+            return await response.json();
+        } catch (error) {
+            console.error('Error toggling habit:', error);
+            throw error;
+        }
+    }
 
-    // Month Navigation
-    function initializeMonthNavigation() {
-        document.querySelectorAll('.habit-tracker').forEach(tracker => {
-            const prevButton = tracker.querySelector('.prev-month');
-            const nextButton = tracker.querySelector('.next-month');
-            const monthDisplay = tracker.querySelector('.month-display');
-            const monthGrid = tracker.querySelector('.month-grid');
-            const habitId = tracker.dataset.habitId;
+    static async getHabitData(habitId, year, month) {
+        try {
+            const response = await fetch(`/get_habit_data/${habitId}/${year}/${month}`);
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching habit data:', error);
+            throw error;
+        }
+    }
 
-            prevButton.addEventListener('click', () => navigateMonth(tracker, -1));
-            nextButton.addEventListener('click', () => navigateMonth(tracker, 1));
+    static async deleteHabit(habitId) {
+        try {
+            const response = await fetch(`/delete_habit/${habitId}`, { method: 'DELETE' });
+            return await response.json();
+        } catch (error) {
+            console.error('Error deleting habit:', error);
+            throw error;
+        }
+    }
+
+    static async generateDescription(habitName) {
+        try {
+            const response = await fetch('/generate_description', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ habit_name: habitName })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error generating description:', error);
+            throw error;
+        }
+    }
+}
+
+// Main HabitTracker class to manage habit tracking functionality
+class HabitTracker {
+    constructor(trackerElement) {
+        this.tracker = trackerElement;
+        this.habitId = trackerElement.dataset.habitId;
+        this.currentMonth = parseInt(trackerElement.dataset.currentMonth);
+        this.currentYear = parseInt(trackerElement.dataset.currentYear);
+        
+        this.elements = {
+            monthGrid: trackerElement.querySelector('.month-grid'),
+            monthDisplay: trackerElement.querySelector('.month-display'),
+            streakCount: trackerElement.closest('.habit-card').querySelector('.streak-count')
+        };
+
+        this.initializeEvents();
+    }
+
+    initializeEvents() {
+        // Month navigation
+        this.tracker.querySelector('.prev-month').addEventListener('click', () => this.navigateMonth(-1));
+        this.tracker.querySelector('.next-month').addEventListener('click', () => this.navigateMonth(1));
+
+        // Day click delegation
+        this.elements.monthGrid.addEventListener('click', (e) => {
+            const dayCircle = e.target.closest('.day-circle');
+            if (dayCircle && dayCircle.classList.contains('active')) {
+                this.handleDayClick(dayCircle);
+            }
         });
     }
 
-    function navigateMonth(tracker, direction) {
-        const currentMonth = parseInt(tracker.dataset.currentMonth);
-        const currentYear = parseInt(tracker.dataset.currentYear);
-        
-        let newMonth = currentMonth + direction;
-        let newYear = currentYear;
+    async handleDayClick(dayCircle) {
+        try {
+            const date = dayCircle.dataset.date;
+            const response = await HabitAPI.toggleHabit(this.habitId, date);
+            
+            if (response.success) {
+                dayCircle.classList.toggle('checked');
+                await this.updateStreakCount();
+            }
+        } catch (error) {
+            console.error('Error handling day click:', error);
+        }
+    }
+
+    async navigateMonth(direction) {
+        let newMonth = this.currentMonth + direction;
+        let newYear = this.currentYear;
 
         if (newMonth > 12) {
             newMonth = 1;
@@ -199,43 +106,87 @@ document.addEventListener('DOMContentLoaded', function() {
             newYear--;
         }
 
-        // Update data attributes
-        tracker.dataset.currentMonth = newMonth;
-        tracker.dataset.currentYear = newYear;
+        this.currentMonth = newMonth;
+        this.currentYear = newYear;
+        this.tracker.dataset.currentMonth = newMonth;
+        this.tracker.dataset.currentYear = newYear;
 
-        // Update month display
         const date = new Date(newYear, newMonth - 1, 1);
-        const monthDisplay = tracker.querySelector('.month-display');
-        monthDisplay.textContent = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        this.elements.monthDisplay.textContent = date.toLocaleDateString('en-US', { 
+            month: 'long', 
+            year: 'numeric' 
+        });
 
-        // Fetch and update habit data for the new month
-        const habitId = tracker.dataset.habitId;
-        fetch(`/get_habit_data/${habitId}/${newYear}/${newMonth}`)
-            .then(response => response.json())
-            .then(data => {
-                updateMonthGrid(tracker, data, date);
-            })
-            .catch(error => console.error('Error fetching habit data:', error));
+        try {
+            const data = await HabitAPI.getHabitData(this.habitId, newYear, newMonth);
+            await this.updateMonthGrid(data, date);
+        } catch (error) {
+            console.error('Error navigating month:', error);
+        }
     }
 
-    function updateMonthGrid(tracker, habitData, date) {
-        const monthGrid = tracker.querySelector('.month-grid');
-        monthGrid.innerHTML = ''; // Clear existing grid
+    async updateStreakCount() {
+        try {
+            const [currentData, prevData, nextData] = await Promise.all([
+                HabitAPI.getHabitData(this.habitId, this.currentYear, this.currentMonth),
+                HabitAPI.getHabitData(this.habitId, this.currentYear, this.currentMonth - 1 || 12),
+                HabitAPI.getHabitData(this.habitId, this.currentYear, this.currentMonth + 1 > 12 ? 1 : this.currentMonth + 1)
+            ]);
+
+            const allDates = [...prevData.completed_dates, ...currentData.completed_dates, ...nextData.completed_dates]
+                .map(dateStr => new Date(dateStr))
+                .sort((a, b) => b - a);
+
+            const streak = this.calculateStreak(allDates);
+            this.updateStreakDisplay(streak);
+        } catch (error) {
+            console.error('Error updating streak count:', error);
+        }
+    }
+
+    calculateStreak(dates) {
+        if (dates.length === 0) return 0;
+        
+        let streak = 1;
+        for (let i = 0; i < dates.length - 1; i++) {
+            const diffDays = Math.ceil(Math.abs(dates[i] - dates[i + 1]) / (1000 * 60 * 60 * 24));
+            if (diffDays === 1) streak++;
+            else break;
+        }
+        return streak;
+    }
+
+    updateStreakDisplay(streak) {
+        const currentStreak = parseInt(this.elements.streakCount.textContent);
+        if (currentStreak !== streak) {
+            this.elements.streakCount.classList.add('updating');
+            setTimeout(() => {
+                this.elements.streakCount.textContent = streak;
+                this.elements.streakCount.classList.remove('updating');
+            }, 200);
+        }
+    }
+
+    async updateMonthGrid(habitData, date) {
+        const monthGrid = this.elements.monthGrid;
+        monthGrid.innerHTML = '';
 
         const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
         const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        const startPadding = (firstDay.getDay() + 6) % 7; // Convert to Sunday start
+        const startPadding = (firstDay.getDay() + 6) % 7;
 
         // Add empty spaces for padding
-        for (let i = 0; i < startPadding; i++) {
+        monthGrid.append(...Array(startPadding).fill().map(() => {
             const emptyDiv = document.createElement('div');
             emptyDiv.className = 'day-circle empty';
-            monthGrid.appendChild(emptyDiv);
-        }
+            return emptyDiv;
+        }));
 
         // Add days of the month
         const today = new Date();
-        for (let day = 1; day <= lastDay.getDate(); day++) {
+        const days = Array.from({ length: lastDay.getDate() }, (_, i) => i + 1);
+        
+        days.forEach(day => {
             const currentDate = new Date(date.getFullYear(), date.getMonth(), day);
             const dateStr = currentDate.toISOString().split('T')[0];
             
@@ -243,108 +194,142 @@ document.addEventListener('DOMContentLoaded', function() {
             dayDiv.className = 'day-circle';
             dayDiv.dataset.date = dateStr;
 
-            // Add active class if date is today or in the past
             if (currentDate <= today) {
                 dayDiv.classList.add('active');
             }
 
-            // Add checked class if habit was completed on this date
-            if (habitData.completed_dates && habitData.completed_dates.includes(dateStr)) {
+            if (habitData.completed_dates?.includes(dateStr)) {
                 dayDiv.classList.add('checked');
             }
 
-            const dayNumber = document.createElement('span');
-            dayNumber.className = 'day-number';
-            dayNumber.textContent = day;
-            dayDiv.appendChild(dayNumber);
-
-            // Add click event listener
-            if (currentDate <= today) {
-                dayDiv.addEventListener('click', function() {
-                    const habitTracker = this.closest('.habit-tracker');
-                    const habitId = habitTracker.dataset.habitId;
-                    
-                    fetch('/toggle_habit', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            habit_id: habitId,
-                            date: dateStr
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            this.classList.toggle('checked');
-                            updateStreakCount(habitTracker);
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-                });
-            }
-
+            dayDiv.innerHTML = `<span class="day-number">${day}</span>`;
             monthGrid.appendChild(dayDiv);
+        });
+
+        await this.updateStreakCount();
+    }
+}
+
+// Habit Input Manager for handling habit input and suggestions
+class HabitInputManager {
+    constructor() {
+        this.habitInput = document.getElementById('habit-input');
+        this.dropdownItems = document.querySelector('.habit-dropdown .dropdown-items');
+        this.habitDropdown = document.querySelector('.habit-dropdown');
+        this.descriptionArea = document.querySelector('.description-wrapper');
+
+        if (this.habitInput && this.dropdownItems) {
+            this.initializeDropdown();
         }
-        
-        // Update streak count after updating the grid
-        updateStreakCount(tracker);
     }
 
-    // Initialize month navigation
-    initializeMonthNavigation();
+    async initializeDropdown() {
+        try {
+            const response = await fetch('/static/predefined_habits.txt');
+            const text = await response.text();
+            const habits = text.split('\n').filter(habit => habit.trim() !== '');
 
-    // Handle delete button clicks
-    const deleteButtons = document.querySelectorAll('.delete-btn');
-    console.log('Found delete buttons:', deleteButtons.length);
-    
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function() {
+            this.createDropdownItems(habits);
+            this.setupEventListeners();
+        } catch (error) {
+            console.error('Error loading predefined habits:', error);
+        }
+    }
+
+    createDropdownItems(habits) {
+        habits.forEach(habit => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.textContent = habit;
+            item.addEventListener('click', (e) => {
+                this.habitInput.value = habit;
+                this.habitDropdown.classList.remove('show');
+                e.stopPropagation();
+            });
+            this.dropdownItems.appendChild(item);
+        });
+    }
+
+    setupEventListeners() {
+        this.habitInput.addEventListener('focus', () => {
+            this.habitDropdown.classList.add('show');
+        });
+
+        this.habitInput.addEventListener('input', () => {
+            this.filterDropdownItems();
+        });
+
+        this.habitInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                this.habitDropdown.classList.remove('show');
+                this.habitInput.blur();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!this.habitInput.contains(e.target) && 
+                !this.habitDropdown.contains(e.target) && 
+                !this.descriptionArea.contains(e.target)) {
+                this.habitDropdown.classList.remove('show');
+            }
+        });
+    }
+
+    filterDropdownItems() {
+        this.habitDropdown.classList.add('show');
+        const filter = this.habitInput.value.toLowerCase();
+        const items = this.dropdownItems.getElementsByClassName('dropdown-item');
+
+        Array.from(items).forEach(item => {
+            item.style.display = item.textContent.toLowerCase().includes(filter) ? '' : 'none';
+        });
+    }
+}
+
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize habit trackers
+    document.querySelectorAll('.habit-tracker').forEach(tracker => {
+        new HabitTracker(tracker);
+    });
+
+    // Initialize habit input
+    new HabitInputManager();
+
+    // Initialize delete buttons
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', async function() {
             const habitId = this.dataset.habitId;
             const habitCard = this.closest('.habit-card');
             
             if (confirm('Are you sure you want to delete this habit?')) {
-                fetch(`/delete_habit/${habitId}`, {
-                    method: 'DELETE'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
+                try {
+                    const response = await HabitAPI.deleteHabit(habitId);
+                    if (response.success) {
                         habitCard.remove();
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
+                } catch (error) {
+                    console.error('Error deleting habit:', error);
+                }
             }
         });
     });
-});
 
-// Initialize generate button functionality
-function initializeGenerateButton() {
+    // Initialize generate button
     const generateBtn = document.getElementById('generate-description');
     const descriptionInput = document.getElementById('habit-description');
     const descriptionWrapper = document.querySelector('.description-wrapper');
     
     if (generateBtn && descriptionInput) {
-        console.log('Generate button and description input found');
         generateBtn.addEventListener('click', async () => {
-            console.log('Generate button clicked');
             const habitName = document.getElementById('habit-input').value;
-            console.log('Habit name:', habitName);
             
             if (!habitName) {
-                console.log('No habit name provided');
                 alert('Please enter a habit name first');
                 return;
             }
 
-            // Store original button content
             const originalContent = generateBtn.innerHTML;
-            
-            // Update button to loading state and start rainbow animation
             generateBtn.classList.add('loading');
             generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
             generateBtn.style.pointerEvents = 'none';
@@ -352,32 +337,13 @@ function initializeGenerateButton() {
             descriptionWrapper.classList.add('rainbow-animation');
             
             try {
-                console.log('Making API request to /generate_description');
-                const response = await fetch('/generate_description', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ habit_name: habitName })
-                });
-                
-                console.log('API response status:', response.status);
-                const data = await response.json();
-                console.log('API response data:', data);
-                
-                if (response.ok) {
-                    console.log('Setting description:', data.description);
+                const data = await HabitAPI.generateDescription(habitName);
+                if (data.description) {
                     descriptionInput.value = data.description;
-                } else {
-                    console.error('API error:', data.error);
-                    alert(data.error || 'Failed to generate description');
                 }
             } catch (error) {
-                console.error('Fetch error:', error);
-                alert('Failed to generate description. Please try again.');
+                alert('Failed to generate description');
             } finally {
-                // Reset button state and stop rainbow animation
-                console.log('Resetting generate button state');
                 generateBtn.classList.remove('loading');
                 generateBtn.innerHTML = originalContent;
                 generateBtn.style.pointerEvents = 'auto';
@@ -385,9 +351,5 @@ function initializeGenerateButton() {
                 descriptionWrapper.classList.remove('rainbow-animation');
             }
         });
-    } else {
-        console.error('Generate button or description input not found in DOM');
-        console.log('Generate button element:', generateBtn);
-        console.log('Description input element:', descriptionInput);
     }
-}
+});
