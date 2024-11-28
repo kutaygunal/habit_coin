@@ -1,0 +1,58 @@
+.habits-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.habit-tracker {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+}
+
+.day-box {
+    text-align: center;
+    padding: 5px;
+}
+
+.date-label {
+    font-size: 0.8em;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.checkbox {
+    width: 25px;
+    height: 25px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.checkbox.completed {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.checkbox:hover {
+    border-color: #28a745;
+}
+
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    color: #333;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    padding: 8px 20px;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
