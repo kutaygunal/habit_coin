@@ -388,6 +388,91 @@ body {
     margin-right: 0.5rem;
 }
 
+/* Profile Page Styling */
+.profile-card {
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.profile-avatar i {
+    font-size: 3rem;
+    color: white;
+}
+
+.profile-stats {
+    margin-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    padding-top: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.stat-item i {
+    margin-right: 1rem;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+.profile-settings {
+    background-color: var(--card-bg);
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.profile-settings h2 {
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+}
+
+.profile-settings h4 {
+    color: var(--text-primary);
+    margin: 2rem 0 1rem;
+}
+
+.profile-settings form {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+}
+
+.profile-settings form:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+.danger-zone {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.danger-zone h4 {
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
 @media (max-width: 768px) {
     .add-habit-form .input-group {
         flex-direction: column;

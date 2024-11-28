@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
@@ -19,7 +19,10 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(60), nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    email_notifications = db.Column(db.Boolean, default=True)
+    theme = db.Column(db.String(20), default='light')
     habits = db.relationship('Habit', backref='user', lazy=True)
 
 class Habit(db.Model):
@@ -187,6 +190,141 @@ def habit_status(habit_id):
     habit_logs = HabitLog.query.filter_by(habit_id=habit_id).all()
     completions = [{'date': log.date.strftime('%Y-%m-%d'), 'completed': log.completed} for log in habit_logs]
     return jsonify({'completions': completions})
+
+@app.route('/profile')
+@login_required
+def profile():
+    # Get user statistics
+    habits_count = Habit.query.filter_by(user_id=current_user.id).count()
+    
+    # Count completed habits in the last 30 days
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    completed_count = HabitLog.query.join(Habit).filter(
+        Habit.user_id == current_user.id,
+        HabitLog.completed == True,
+        HabitLog.date >= thirty_days_ago
+    ).count()
+    
+    # Calculate current streak
+    streak_count = 0
+    today = datetime.utcnow().date()
+    check_date = today
+    
+    while True:
+        day_completed = HabitLog.query.join(Habit).filter(
+            Habit.user_id == current_user.id,
+            HabitLog.date == check_date,
+            HabitLog.completed == True
+        ).first()
+        
+        if not day_completed:
+            break
+            
+        streak_count += 1
+        check_date -= timedelta(days=1)
+    
+    return render_template('profile.html', 
+                         habits_count=habits_count,
+                         completed_count=completed_count,
+                         streak_count=streak_count)
+
+@app.route('/update_profile', methods=['POST'])
+@login_required
+def update_profile():
+    email = request.form.get('email')
+    username = request.form.get('username')
+    
+    if not email or not username:
+        flash('Email and username are required.', 'danger')
+        return redirect(url_for('profile'))
+    
+    # Check if email is already taken by another user
+    email_exists = User.query.filter(User.email == email, User.id != current_user.id).first()
+    if email_exists:
+        flash('Email is already taken.', 'danger')
+        return redirect(url_for('profile'))
+    
+    # Check if username is already taken by another user
+    username_exists = User.query.filter(User.username == username, User.id != current_user.id).first()
+    if username_exists:
+        flash('Username is already taken.', 'danger')
+        return redirect(url_for('profile'))
+    
+    current_user.email = email
+    current_user.username = username
+    db.session.commit()
+    
+    flash('Profile updated successfully!', 'success')
+    return redirect(url_for('profile'))
+
+@app.route('/change_password', methods=['POST'])
+@login_required
+def change_password():
+    current_password = request.form.get('current_password')
+    new_password = request.form.get('new_password')
+    confirm_password = request.form.get('confirm_password')
+    
+    if not current_password or not new_password or not confirm_password:
+        flash('All password fields are required.', 'danger')
+        return redirect(url_for('profile'))
+    
+    if not bcrypt.check_password_hash(current_user.password, current_password):
+        flash('Current password is incorrect.', 'danger')
+        return redirect(url_for('profile'))
+    
+    if new_password != confirm_password:
+        flash('New passwords do not match.', 'danger')
+        return redirect(url_for('profile'))
+    
+    if len(new_password) < 6:
+        flash('Password must be at least 6 characters long.', 'danger')
+        return redirect(url_for('profile'))
+    
+    current_user.password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+    db.session.commit()
+    
+    flash('Password changed successfully!', 'success')
+    return redirect(url_for('profile'))
+
+@app.route('/update_preferences', methods=['POST'])
+@login_required
+def update_preferences():
+    email_notifications = request.form.get('email_notifications') == 'on'
+    theme = request.form.get('theme', 'light')
+    
+    current_user.email_notifications = email_notifications
+    current_user.theme = theme
+    db.session.commit()
+    
+    flash('Preferences updated successfully!', 'success')
+    return redirect(url_for('profile'))
+
+@app.route('/delete_account', methods=['POST'])
+@login_required
+def delete_account():
+    password = request.form.get('password')
+    
+    if not password:
+        flash('Password is required to delete account.', 'danger')
+        return redirect(url_for('profile'))
+    
+    if not bcrypt.check_password_hash(current_user.password, password):
+        flash('Password is incorrect.', 'danger')
+        return redirect(url_for('profile'))
+    
+    # Delete all user's habits and habit logs
+    habits = Habit.query.filter_by(user_id=current_user.id).all()
+    for habit in habits:
+        HabitLog.query.filter_by(habit_id=habit.id).delete()
+    Habit.query.filter_by(user_id=current_user.id).delete()
+    
+    # Delete the user
+    db.session.delete(current_user)
+    db.session.commit()
+    
+    logout_user()
+    flash('Your account has been deleted.', 'info')
+    return redirect(url_for('login'))
 
 with app.app_context():
     db.create_all()
