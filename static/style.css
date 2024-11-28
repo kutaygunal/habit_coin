@@ -488,6 +488,101 @@ body {
     margin-bottom: 1rem;
 }
 
+/* Profile Photo Styling */
+.profile-photo-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+.profile-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+.profile-photo-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.profile-photo-container:hover .profile-photo-overlay {
+    opacity: 1;
+}
+
+.profile-photo-container:hover .profile-photo {
+    transform: scale(1.1);
+}
+
+.photo-upload-label {
+    color: white;
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.photo-upload-label i {
+    font-size: 24px;
+}
+
+.photo-upload-label span {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* Image Cropper Styles */
+.img-container {
+    max-height: 400px;
+    margin-bottom: 1rem;
+}
+
+.img-container img {
+    max-width: 100%;
+    max-height: 400px;
+}
+
+.crop-controls {
+    text-align: center;
+}
+
+.cropper-view-box,
+.cropper-face {
+    border-radius: 50%;
+}
+
+.cropper-view-box {
+    box-shadow: 0 0 0 1px #39f;
+    outline: 0;
+}
+
+.cropper-face {
+    background-color: inherit !important;
+}
+
+.modal-lg {
+    max-width: 800px;
+}
+
 @media (max-width: 768px) {
     .add-habit-form .input-group {
         flex-direction: column;

@@ -5,10 +5,23 @@ from flask_bcrypt import Bcrypt
 from datetime import datetime, timedelta
 import os
 from urllib.parse import urlparse
+from werkzeug.utils import secure_filename
+import uuid
+import time
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///habits.db'
 app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this to a secure secret key
+app.config['UPLOAD_FOLDER'] = os.path.join(app.static_folder, 'profile_photos')
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024  # 1MB max file size
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+# Create upload folder if it doesn't exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
@@ -23,6 +36,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     email_notifications = db.Column(db.Boolean, default=True)
     theme = db.Column(db.String(20), default='light')
+    profile_photo = db.Column(db.String(200), default='default.png')
     habits = db.relationship('Habit', backref='user', lazy=True)
 
 class Habit(db.Model):
@@ -325,6 +339,46 @@ def delete_account():
     logout_user()
     flash('Your account has been deleted.', 'info')
     return redirect(url_for('login'))
+
+@app.route('/upload_profile_photo', methods=['POST'])
+@login_required
+def upload_profile_photo():
+    if 'photo' not in request.files:
+        return jsonify({'success': False, 'message': 'No file uploaded'}), 400
+    
+    photo = request.files['photo']
+    
+    if photo.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected'}), 400
+    
+    if not allowed_file(photo.filename):
+        return jsonify({'success': False, 'message': 'Invalid file type'}), 400
+    
+    try:
+        # Generate unique filename
+        filename = secure_filename(f"{current_user.id}_{int(time.time())}.jpg")
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # Save the file
+        photo.save(filepath)
+        
+        # Update user's profile photo in database
+        if current_user.profile_photo != 'default.png':
+            # Delete old profile photo
+            old_photo_path = os.path.join(app.config['UPLOAD_FOLDER'], current_user.profile_photo)
+            if os.path.exists(old_photo_path):
+                os.remove(old_photo_path)
+        
+        current_user.profile_photo = filename
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'photo_url': url_for('static', filename=f'profile_photos/{filename}')
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 with app.app_context():
     db.create_all()
