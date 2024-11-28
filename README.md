@@ -42,6 +42,11 @@ A modern web application for tracking daily habits and building consistent routi
 - Maximum file size: 1MB
 - Automatic image optimization
 
+### AI-Powered Features
+- Integration with Ollama LLM for generating habit descriptions
+- Local model: `smollm2:1.7b-instruct-q4_0`
+- Generate concise and motivating descriptions for habits
+
 ### Security Features
 - Password hashing with bcrypt
 - User authentication required for all routes
@@ -71,8 +76,7 @@ A modern web application for tracking daily habits and building consistent routi
 - Font Awesome icons
 - Cropper.js for image processing
 
-## Installation
-
+## Installation and Setup
 1. Clone the repository:
 ```bash
 git clone https://github.com/kutaygunal/habit_coin.git
@@ -95,12 +99,18 @@ pip install -r requirements.txt
 python reset_db.py
 ```
 
-5. Run the application:
+5. Ensure Ollama is installed and running on your system.
+6. Start the Ollama service with the model using `ollama run smollm2:1.7b-instruct-q4_0`.
+7. Run the Flask application:
 ```bash
-python app.py
+flask run
 ```
 
-6. Visit `http://localhost:5000` in your web browser
+8. Visit `http://localhost:5000` in your web browser
+
+## Usage
+- Enter a habit name and click the "Generate" button to get a description.
+- The application will use the local Ollama model to generate a suitable description.
 
 ## Dependencies
 
