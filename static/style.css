@@ -184,17 +184,31 @@ body {
 }
 
 .day-circle {
-    position: relative;
-    width: 2rem;
-    height: 2rem;
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--primary-color);
     border-radius: 50%;
-    background-color: white;
-    border: 1.5px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s ease;
+    background-color: transparent;
+}
+
+.day-circle.checked {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.day-circle:not(.active) {
+    border-color: var(--border-color);
+    cursor: default;
+    opacity: 0.5;
+}
+
+.day-circle:hover.active:not(.checked) {
+    background-color: rgba(99, 102, 241, 0.1);
 }
 
 .day-circle .day-number {
@@ -212,16 +226,6 @@ body {
 }
 
 .day-circle.active {
-    border-color: var(--primary-color);
-}
-
-.day-circle:not(.empty):hover {
-    border-color: var(--primary-hover);
-    transform: scale(1.05);
-}
-
-.day-circle.checked {
-    background-color: var(--primary-color);
     border-color: var(--primary-color);
 }
 
@@ -251,6 +255,13 @@ body {
 
 .day-circle.checked .check-mark {
     opacity: 1;
+}
+
+/* Add the new style for active and clicked state */
+.day-circle.active.clicked {
+    background-color: green;
+    color: white;
+    border-color: green;
 }
 
 .habit-header {

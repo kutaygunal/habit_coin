@@ -133,10 +133,9 @@ def index():
         
         # Get completion status for each habit
         for habit in habits:
-            habit.completions = {
-                log.date: log.completed 
-                for log in HabitLog.query.filter_by(habit_id=habit.id).all()
-            }
+            # Get all habit logs for this habit
+            habit_logs = HabitLog.query.filter_by(habit_id=habit.id).all()
+            habit.completed_dates = {log.date for log in habit_logs if log.completed}
             
             # Calculate days in the current month
             _, num_days = monthrange(today.year, today.month)
@@ -174,66 +173,48 @@ def add_habit():
 @login_required
 def toggle_habit():
     try:
-        app.logger.info('Received toggle_habit request')
         data = request.get_json()
-        app.logger.info(f'Request data: {data}')
-        
         habit_id = data.get('habit_id')
         date_str = data.get('date')
         
         if not habit_id or not date_str:
-            app.logger.error(f'Missing required data: habit_id={habit_id}, date={date_str}')
-            return jsonify({'success': False, 'error': 'Missing required data'}), 400
-            
-        habit = Habit.query.get_or_404(habit_id)
-        app.logger.info(f'Found habit: {habit.name}')
+            return jsonify({'success': False, 'error': 'Missing data'}), 400
         
-        # Ensure the habit belongs to the current user
-        if habit.user_id != current_user.id:
-            app.logger.error(f'Unauthorized access: habit belongs to user {habit.user_id}, current user is {current_user.id}')
-            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        habit = Habit.query.get(habit_id)
+        if not habit or habit.user_id != current_user.id:
+            return jsonify({'success': False, 'error': 'Habit not found'}), 404
             
+        # Parse the date string to a date object
         date = datetime.strptime(date_str, '%Y-%m-%d').date()
-        app.logger.info(f'Parsed date: {date}')
         
-        # Find existing log or create new one
-        log = HabitLog.query.filter_by(habit_id=habit_id, date=date).first()
-        if log:
-            app.logger.info(f'Found existing log, current status: {log.completed}')
-            log.completed = not log.completed
-            app.logger.info(f'Toggled completion to: {log.completed}')
+        # Find existing log for this date
+        habit_log = HabitLog.query.filter_by(
+            habit_id=habit_id,
+            date=date
+        ).first()
+        
+        if habit_log:
+            # Toggle existing log
+            habit_log.completed = not habit_log.completed
         else:
-            app.logger.info('Creating new log entry')
-            log = HabitLog(habit_id=habit_id, date=date, completed=True)
-            db.session.add(log)
+            # Create new log
+            habit_log = HabitLog(
+                habit_id=habit_id,
+                date=date,
+                completed=True  # New logs are always completed
+            )
+            db.session.add(habit_log)
             
         db.session.commit()
-        app.logger.info('Database updated successfully')
-        
-        # Calculate current streak
-        streak = 0
-        current_date = datetime.now().date()
-        while True:
-            log = HabitLog.query.filter_by(
-                habit_id=habit_id,
-                date=current_date,
-                completed=True
-            ).first()
-            if not log:
-                break
-            streak += 1
-            current_date -= timedelta(days=1)
-        
-        app.logger.info(f'Calculated streak: {streak}')
         
         return jsonify({
             'success': True,
-            'completed': log.completed,
-            'streak': streak
+            'completed': habit_log.completed
         })
         
     except Exception as e:
-        app.logger.error(f"Error in toggle_habit route: {str(e)}")
+        print(f"Error in toggle_habit: {str(e)}")
+        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/delete_habit/<int:habit_id>', methods=['DELETE'])

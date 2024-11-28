@@ -1,21 +1,32 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM Content Loaded');
+    console.log('DOM Content Loaded - Starting habits.js');
     
-    // Handle clicking on day circles
+    // Select all day circles
     const circles = document.querySelectorAll('.day-circle');
     console.log('Found circles:', circles.length);
     
-    circles.forEach(circle => {
+    if (circles.length === 0) {
+        console.error('No circles found! Check if the class name is correct.');
+        return;
+    }
+
+    // Add click event listener to each circle
+    circles.forEach((circle, index) => {
+        console.log(`Adding click listener to circle ${index}`);
+        
         circle.addEventListener('click', function(e) {
-            console.log('Circle clicked');
-            console.log('Circle classes:', this.classList.toString());
-            console.log('Circle dataset:', this.dataset);
+            console.log(`Circle ${index} clicked!`);
             
             // Only proceed if the circle is active
             if (!this.classList.contains('active')) {
                 console.log('Circle is not active');
                 return;
             }
+
+
+            // Toggle clicked state
+            this.classList.toggle('clicked');
+            console.log('New class list:', this.classList.toString());
 
             const habitTracker = this.closest('.habit-tracker');
             console.log('Habit tracker:', habitTracker);
@@ -30,15 +41,11 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('Processing click:', { habitId, date });
             
-            // Toggle checked state
-            this.classList.toggle('checked');
-            
             // Update in database
             fetch('/toggle_habit', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     habit_id: habitId,
@@ -52,24 +59,21 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 console.log('Server response:', data);
                 if (data.success) {
-                    // Update streak count if provided
-                    if (data.streak !== undefined) {
-                        const streakElement = this.closest('.habit-card')
-                            .querySelector('.streak-count');
-                        if (streakElement) {
-                            streakElement.textContent = data.streak;
-                        }
+                    // Toggle the clicked state based on server response
+                    if (data.completed) {
+                        this.classList.add('checked');
+                    } else {
+                        this.classList.remove('checked');
                     }
                 } else {
-                    console.error('Server returned error:', data.error);
-                    // If the server update failed, revert the UI change
-                    this.classList.toggle('checked');
+                    // If server update failed, revert the clicked state
+                    this.classList.toggle('clicked');
                 }
             })
             .catch(error => {
-                console.error('Fetch error:', error);
-                // Revert the UI change if the server update failed
-                this.classList.toggle('checked');
+                console.error('Error:', error);
+                // Revert the clicked state on error
+                this.classList.toggle('clicked');
             });
         });
     });
