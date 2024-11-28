@@ -50,7 +50,7 @@
             <!-- Habits Grid -->
             <div class="habits-grid">
                 {% for habit in habits %}
-                <div class="habit-card">
+                <div class="habit-card" data-habit-id="{{ habit.id }}">
                     <div class="habit-header">
                         <h3>{{ habit.name }}</h3>
                         <div class="habit-actions">
@@ -68,19 +68,41 @@
                     <p class="habit-description">{{ habit.description }}</p>
                     {% endif %}
                     
-                    <div class="habit-tracker" data-habit-id="{{ habit.id }}">
-                        {% for i in range(7) %}
-                        {% set current_date = today - timedelta(days=6-i) %}
-                        <div class="day-box" data-date="{{ current_date.strftime('%Y-%m-%d') }}">
-                            <div class="date-label">
-                                <span class="day-name">{{ current_date.strftime('%a') }}</span>
-                                <span class="day-number">{{ current_date.strftime('%d') }}</span>
-                            </div>
-                            <div class="checkbox">
-                                <i class="fas fa-check check-icon"></i>
-                            </div>
+                    <div class="habit-tracker">
+                        <div class="month-header">
+                            <h4>{{ today.strftime('%B %Y') }}</h4>
                         </div>
-                        {% endfor %}
+                        <div class="weekday-header">
+                            <div class="weekday">Sun</div>
+                            <div class="weekday">Mon</div>
+                            <div class="weekday">Tue</div>
+                            <div class="weekday">Wed</div>
+                            <div class="weekday">Thu</div>
+                            <div class="weekday">Fri</div>
+                            <div class="weekday">Sat</div>
+                        </div>
+                        <div class="month-grid">
+                            {# Add empty spaces for days before the 1st of the month #}
+                            {% set first_day = habit.month_days[0] %}
+                            {% set first_weekday = first_day.weekday() %}
+                            {% set sunday_start = (first_weekday + 1) % 7 %}  {# Convert to Sunday start #}
+                            {% for _ in range(sunday_start) %}
+                                <div class="day-circle empty"></div>
+                            {% endfor %}
+                            
+                            {# Add the actual days #}
+                            {% for date in habit.month_days %}
+                            <div class="day-circle {% if date <= today %}active{% endif %} {% if date in habit.completions and habit.completions[date] %}checked{% endif %}" 
+                                 data-date="{{ date.strftime('%Y-%m-%d') }}">
+                                <span class="day-number">{{ date.day }}</span>
+                                {% if date in habit.completions and habit.completions[date] %}
+                                <div class="check-mark">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
                 {% endfor %}

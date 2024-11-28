@@ -135,11 +135,122 @@ body {
     background-color: #ffffff;
     border: 1px solid #e2e8f0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    min-width: 300px;
 }
 
-.habit-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 12px -1px rgba(0, 0, 0, 0.1);
+.habit-tracker {
+    margin-top: 1rem;
+    width: 100%;
+    overflow-x: auto;
+    background-color: var(--bg-color);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+}
+
+.month-header {
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.month-header h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0.25rem;
+}
+
+.weekday-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+    justify-items: center;
+}
+
+.weekday {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    width: 2rem;
+    text-align: center;
+}
+
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+    justify-items: center;
+}
+
+.day-circle {
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: white;
+    border: 1.5px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.day-circle .day-number {
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.day-circle.empty {
+    background-color: transparent;
+    border: none;
+    cursor: default;
+    visibility: visible;
+    pointer-events: none;
+}
+
+.day-circle.active {
+    border-color: var(--primary-color);
+}
+
+.day-circle:not(.empty):hover {
+    border-color: var(--primary-hover);
+    transform: scale(1.05);
+}
+
+.day-circle.checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.day-circle.checked .day-number {
+    color: white;
+}
+
+.day-circle .check-mark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    transition: opacity 0.2s ease;
+}
+
+.day-circle .check-mark i {
+    color: white;
+    font-size: 0.875rem;
+}
+
+.day-circle.checked .check-mark {
+    opacity: 1;
 }
 
 .habit-header {
@@ -172,68 +283,6 @@ body {
     color: var(--text-secondary);
     font-size: 0.875rem;
     margin-bottom: 1.5rem;
-}
-
-.habit-tracker {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.5rem;
-}
-
-.day-box {
-    text-align: center;
-}
-
-.date-label {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.25rem;
-}
-
-.day-name {
-    font-weight: 500;
-}
-
-.day-number {
-    font-size: 0.675rem;
-}
-
-.checkbox {
-    width: 2rem;
-    height: 2rem;
-    border: 2px solid var(--border-color);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-}
-
-.checkbox:hover {
-    border-color: var(--primary-color);
-    background-color: rgba(99, 102, 241, 0.1);
-}
-
-.checkbox.completed {
-    background-color: var(--success-color);
-    border-color: var(--success-color);
-}
-
-.check-icon {
-    color: white;
-    font-size: 1rem;
-    opacity: 0;
-    transform: scale(0.5);
-    transition: all 0.2s ease;
-}
-
-.checkbox.completed .check-icon {
-    opacity: 1;
-    transform: scale(1);
 }
 
 .habit-actions {
@@ -642,5 +691,25 @@ body {
     
     .habits-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 768px) {
+    .habit-card {
+        min-width: 350px;
+    }
+
+    .day-circle {
+        width: 2.25rem;
+        height: 2.25rem;
+    }
+
+    .weekday {
+        width: 2.25rem;
+        font-size: 0.8rem;
+    }
+
+    .day-circle .day-number {
+        font-size: 0.8rem;
     }
 }

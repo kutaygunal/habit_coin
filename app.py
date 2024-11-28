@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 from werkzeug.utils import secure_filename
 import uuid
 import time
+from calendar import monthrange
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///habits.db'
@@ -128,12 +129,33 @@ def logout():
 def index():
     try:
         habits = Habit.query.filter_by(user_id=current_user.id).all()
-        today = datetime.now().date()
-        return render_template('index.html', habits=habits, today=today, timedelta=timedelta)
+        today = datetime.now()  # Get full datetime object
+        
+        # Get completion status for each habit
+        for habit in habits:
+            habit.completions = {
+                log.date: log.completed 
+                for log in HabitLog.query.filter_by(habit_id=habit.id).all()
+            }
+            
+            # Calculate days in the current month
+            _, num_days = monthrange(today.year, today.month)
+            
+            # Create list of dates for the current month
+            month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            habit.month_days = [
+                (month_start + timedelta(days=i)).date()
+                for i in range(num_days)
+            ]
+            
+        return render_template('index.html', 
+                             habits=habits, 
+                             today=today.date(),  # Convert to date for template
+                             timedelta=timedelta)
     except Exception as e:
         app.logger.error(f"Error in index route: {str(e)}")
         flash('An error occurred while loading habits.', 'danger')
-        return render_template('index.html', habits=[])
+        return redirect(url_for('index'))
 
 @app.route('/add_habit', methods=['POST'])
 @login_required
@@ -151,28 +173,68 @@ def add_habit():
 @app.route('/toggle_habit', methods=['POST'])
 @login_required
 def toggle_habit():
-    habit_id = request.json.get('habit_id')
-    date_str = request.json.get('date')
-    date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    
-    # Verify the habit belongs to the current user
-    habit = Habit.query.get_or_404(habit_id)
-    if habit.user_id != current_user.id:
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-    
-    habit_log = HabitLog.query.filter_by(
-        habit_id=habit_id,
-        date=date
-    ).first()
-    
-    if habit_log:
-        habit_log.completed = not habit_log.completed
-    else:
-        habit_log = HabitLog(habit_id=habit_id, date=date, completed=True)
-        db.session.add(habit_log)
-    
-    db.session.commit()
-    return jsonify({'success': True})
+    try:
+        app.logger.info('Received toggle_habit request')
+        data = request.get_json()
+        app.logger.info(f'Request data: {data}')
+        
+        habit_id = data.get('habit_id')
+        date_str = data.get('date')
+        
+        if not habit_id or not date_str:
+            app.logger.error(f'Missing required data: habit_id={habit_id}, date={date_str}')
+            return jsonify({'success': False, 'error': 'Missing required data'}), 400
+            
+        habit = Habit.query.get_or_404(habit_id)
+        app.logger.info(f'Found habit: {habit.name}')
+        
+        # Ensure the habit belongs to the current user
+        if habit.user_id != current_user.id:
+            app.logger.error(f'Unauthorized access: habit belongs to user {habit.user_id}, current user is {current_user.id}')
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+            
+        date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        app.logger.info(f'Parsed date: {date}')
+        
+        # Find existing log or create new one
+        log = HabitLog.query.filter_by(habit_id=habit_id, date=date).first()
+        if log:
+            app.logger.info(f'Found existing log, current status: {log.completed}')
+            log.completed = not log.completed
+            app.logger.info(f'Toggled completion to: {log.completed}')
+        else:
+            app.logger.info('Creating new log entry')
+            log = HabitLog(habit_id=habit_id, date=date, completed=True)
+            db.session.add(log)
+            
+        db.session.commit()
+        app.logger.info('Database updated successfully')
+        
+        # Calculate current streak
+        streak = 0
+        current_date = datetime.now().date()
+        while True:
+            log = HabitLog.query.filter_by(
+                habit_id=habit_id,
+                date=current_date,
+                completed=True
+            ).first()
+            if not log:
+                break
+            streak += 1
+            current_date -= timedelta(days=1)
+        
+        app.logger.info(f'Calculated streak: {streak}')
+        
+        return jsonify({
+            'success': True,
+            'completed': log.completed,
+            'streak': streak
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Error in toggle_habit route: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/delete_habit/<int:habit_id>', methods=['DELETE'])
 @login_required
