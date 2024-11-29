@@ -338,21 +338,17 @@ class FilterManager {
         const searchText = this.searchInput.value.toLowerCase();
         const selectedTags = Array.from(this.tagCheckboxes)
             .filter(cb => cb.checked)
-            .map(cb => cb.id.replace('tag', ''));
+            .map(cb => cb.value); // Use checkbox value which contains the tag ID
 
         this.habitCards.forEach(card => {
             const habitName = card.querySelector('h3').textContent.toLowerCase();
-            const habitTags = Array.from(card.querySelectorAll('.habit-tag'))
-                .map(tag => tag.closest('.habit-tag').textContent.trim());
+            const habitTagElements = card.querySelectorAll('.habit-tag');
+            const habitTagIds = Array.from(habitTagElements).map(tag => tag.dataset.tagId);
             
             const matchesSearch = !searchText || habitName.includes(searchText);
             const matchesTags = selectedTags.length === 0 || 
-                selectedTags.every(tagId => {
-                    const tagElement = document.querySelector(`label[for="tag${tagId}"] .badge`);
-                    return tagElement && habitTags.includes(tagElement.textContent.trim());
-                });
+                selectedTags.every(tagId => habitTagIds.includes(tagId));
 
-            // Show card only if it matches both search and tag filters
             card.style.display = (matchesSearch && matchesTags) ? '' : 'none';
         });
     }
