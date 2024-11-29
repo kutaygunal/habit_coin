@@ -50,14 +50,18 @@
                         <i class="fas fa-tags"></i> Tags
                     </button>
                     <div class="dropdown-menu p-2" style="min-width: 200px;">
-                        {% for tag in all_tags %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="tag{{ tag.id }}">
-                            <label class="form-check-label" for="tag{{ tag.id }}">
-                                <span class="badge" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
-                            </label>
-                        </div>
-                        {% endfor %}
+                        {% if tags %}
+                            {% for tag in tags %}
+                            <div class="form-check">
+                                <input class="form-check-input filter-tag-checkbox" type="checkbox" id="filter-tag{{ tag.id }}" value="{{ tag.id }}">
+                                <label class="form-check-label" for="filter-tag{{ tag.id }}">
+                                    <span class="badge" style="background-color: {{ tag.color }}">{{ tag.name }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No tags available. Create tags in your profile page.</p>
+                        {% endif %}
                     </div>
                 </div>
                 <button class="btn btn-outline-secondary clear-filter-btn">
