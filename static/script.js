@@ -4,12 +4,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize habit autocomplete
     initializeHabitAutocomplete();
 
-    // Initialize checkboxes based on database state
-    updateHabitDisplay();
-
-    // Initialize delete functionality
-    initializeDeleteButtons();
-
     // Initialize tag functionality
     console.log('Initializing tag management...');
     initializeTagManagement();
@@ -38,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     this.classList.toggle('completed');
-                    updateStreakCount(habitId);
                 }
             })
             .catch(error => console.error('Error:', error))
@@ -120,71 +113,9 @@ function updateHabitDisplay() {
                         }
                     }
                 });
-                
-                // Update streak count
-                updateStreakCount(habitId);
             })
             .catch(error => console.error('Error:', error));
     });
-}
-
-function updateStreakCount(habitId) {
-    const tracker = document.querySelector(`.habit-tracker[data-habit-id="${habitId}"]`);
-    const card = tracker.closest('.habit-card');
-    const streakCount = card.querySelector('.streak-count');
-    
-    // Get all completed dates and sort them
-    const completedElements = Array.from(tracker.querySelectorAll('.day-circle.checked'));
-    console.log('Found completed elements:', completedElements);
-    
-    const completedDates = completedElements
-        .map(element => {
-            const dateStr = element.dataset.date;
-            console.log('Processing date:', dateStr);
-            return new Date(dateStr);
-        })
-        .sort((a, b) => b - a); // Sort in descending order (most recent first)
-    
-    console.log('Sorted completed dates:', completedDates);
-    
-    let streak = 0;
-    if (completedDates.length > 0) {
-        streak = 1; // Start with 1 for the most recent date
-        for (let i = 0; i < completedDates.length - 1; i++) {
-            const currentDate = completedDates[i];
-            const nextDate = completedDates[i + 1];
-            
-            // Calculate the difference in days
-            const diffTime = Math.abs(currentDate - nextDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            console.log('Comparing dates:', {
-                current: currentDate.toISOString(),
-                next: nextDate.toISOString(),
-                diffDays: diffDays
-            });
-            
-            if (diffDays === 1) {
-                streak++;
-                console.log('Streak increased to:', streak);
-            } else {
-                console.log('Streak broken, gap of', diffDays, 'days');
-                break;
-            }
-        }
-    }
-    
-    console.log('Final streak:', streak);
-    
-    // Update streak count with animation
-    const currentStreak = parseInt(streakCount.textContent);
-    if (currentStreak !== streak) {
-        streakCount.classList.add('updating');
-        setTimeout(() => {
-            streakCount.textContent = streak;
-            streakCount.classList.remove('updating');
-        }, 200);
-    }
 }
 
 async function initializeHabitAutocomplete() {
