@@ -34,14 +34,6 @@
     </nav>
 
     <div class="container mt-4">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
         <div class="row">
             <!-- Profile Overview -->
             <div class="col-md-4">
@@ -89,14 +81,6 @@
                 <div class="profile-settings">
                     <h2>Settings</h2>
                     
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ category }}">{{ message }}</div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-
                     <!-- Update Profile Form -->
                     <form method="POST" action="{{ url_for('update_profile') }}" class="mb-4">
                         <h4>Update Profile Information</h4>
@@ -130,12 +114,19 @@
                     </form>
 
                     <!-- Manage Tag Section -->
-                    <form method="POST" action="{{ url_for('manage_tags') }}" class="mt-4 mb-4">
+                    <form id="manage-tags-form" method="POST" action="{{ url_for('manage_tags') }}" class="mt-4 mb-4">
                         <h4>Manage Tags</h4>
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
                         <div class="mb-3">
                             <label for="tag_name" class="form-label">Tag Name</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" id="tag_name" name="tag_name" placeholder="Enter tag name" required>
+                                <input type="text" class="form-control" id="tag_name" name="tag_name" required>
                                 <button type="submit" class="btn btn-primary">Add Tag</button>
                             </div>
                         </div>
@@ -325,6 +316,25 @@
                 });
             }, 'image/jpeg', 0.9);
         }
+    </script>
+
+    <script>
+        document.getElementById('manage-tags-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch(this.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.querySelector('.profile-settings').innerHTML;
+                document.querySelector('.profile-settings').innerHTML = newContent;
+            })
+            .catch(error => console.error('Error:', error));
+        });
     </script>
 </body>
 </html>
