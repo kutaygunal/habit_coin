@@ -834,6 +834,83 @@ body {
     display: block;
 }
 
+.tag-item:nth-of-type(5n+1) {
+    background-color: #ff9f40;  /* Orange */
+}
+
+.tag-item:nth-of-type(5n+2) {
+    background-color: #ffeb3b;  /* Yellow */
+}
+
+.tag-item:nth-of-type(5n+3) {
+    background-color: #f44336;  /* Red */
+}
+
+.tag-item:nth-of-type(5n+4) {
+    background-color: #2196f3;  /* Blue */
+}
+
+.tag-item:nth-of-type(5n+5) {
+    background-color: #4caf50;  /* Green */
+}
+
+.tag-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 16px;
+    margin: 2px;
+    font-size: 0.9rem;
+    color: white;
+}
+
+.tag-item:nth-of-type(5n+2) {
+    color: black;  /* Better contrast for yellow background */
+}
+
+.tag-item:nth-of-type(5n+2) a {
+    color: black !important;  /* Better contrast for yellow background */
+}
+
+.tag-item a {
+    color: white;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.tag-item a:hover {
+    opacity: 1;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.delete-btn:hover {
+    color: #ef4444;
+    background-color: #fee2e2;
+    transform: scale(1.1);
+}
+
+.delete-btn i {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+}
+
+.delete-btn:hover i {
+    color: #ef4444;
+}
+
 @media (max-width: 768px) {
     .add-habit-form .input-group {
         flex-direction: column;
