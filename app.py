@@ -44,6 +44,7 @@ class User(UserMixin, db.Model):
     email_notifications = db.Column(db.Boolean, default=True)
     profile_photo = db.Column(db.String(255), default='default.png')
     habits = db.relationship('Habit', backref='user', lazy=True)
+    tags = db.relationship('Tag', backref='user', lazy=True)
 
 class Habit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -51,12 +52,19 @@ class Habit(db.Model):
     description = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Changed to nullable=True temporarily
-    
+
 class HabitLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     habit_id = db.Column(db.Integer, db.ForeignKey('habit.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     completed = db.Column(db.Boolean, default=False)
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    color = db.Column(db.String(7), nullable=False, default='#007bff')  # Default Bootstrap primary color
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -332,10 +340,43 @@ def profile():
         streak_count += 1
         check_date -= timedelta(days=1)
     
+    # Get user's tags
+    tags = Tag.query.filter_by(user_id=current_user.id).all()
+    
     return render_template('profile.html', 
                          habits_count=habits_count,
                          completed_count=completed_count,
-                         streak_count=streak_count)
+                         streak_count=streak_count,
+                         tags=tags)
+
+@app.route('/manage_tags', methods=['POST'])
+@login_required
+def manage_tags():
+    tag_name = request.form.get('tag_name')
+    if tag_name:
+        # Check if tag already exists for this user
+        existing_tag = Tag.query.filter_by(user_id=current_user.id, name=tag_name).first()
+        if existing_tag:
+            flash('Tag already exists!', 'warning')
+        else:
+            new_tag = Tag(name=tag_name, user_id=current_user.id)
+            db.session.add(new_tag)
+            db.session.commit()
+            flash('Tag added successfully!', 'success')
+    return redirect(url_for('profile'))
+
+@app.route('/delete_tag/<int:tag_id>')
+@login_required
+def delete_tag(tag_id):
+    tag = Tag.query.get_or_404(tag_id)
+    if tag.user_id != current_user.id:
+        flash('You do not have permission to delete this tag!', 'danger')
+        return redirect(url_for('profile'))
+    
+    db.session.delete(tag)
+    db.session.commit()
+    flash('Tag deleted successfully!', 'success')
+    return redirect(url_for('profile'))
 
 @app.route('/update_profile', methods=['POST'])
 @login_required

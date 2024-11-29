@@ -129,6 +129,31 @@
                         <button type="submit" class="btn btn-primary">Change Password</button>
                     </form>
 
+                    <!-- Manage Tag Section -->
+                    <form method="POST" action="{{ url_for('manage_tags') }}" class="mt-4 mb-4">
+                        <h4>Manage Tags</h4>
+                        <div class="mb-3">
+                            <label for="tag_name" class="form-label">Tag Name</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="tag_name" name="tag_name" placeholder="Enter tag name" required>
+                                <button type="submit" class="btn btn-primary">Add Tag</button>
+                            </div>
+                        </div>
+                        {% if tags %}
+                        <div class="tags-container mt-3">
+                            {% for tag in tags %}
+                            <div class="tag-item d-inline-flex align-items-center me-2 mb-2">
+                                <span class="badge bg-primary">{{ tag.name }}
+                                    <a href="{{ url_for('delete_tag', tag_id=tag.id) }}" class="text-white ms-2 text-decoration-none">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </form>
+
                     <!-- Preferences Section -->
                     <form method="POST" action="{{ url_for('update_profile') }}" class="mt-4">
                         <h4>Preferences</h4>
