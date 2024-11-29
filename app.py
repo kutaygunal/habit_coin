@@ -354,15 +354,20 @@ def profile():
 def manage_tags():
     tag_name = request.form.get('tag_name')
     if tag_name:
-        # Check if tag already exists for this user
-        existing_tag = Tag.query.filter_by(user_id=current_user.id, name=tag_name).first()
-        if existing_tag:
-            flash('Tag already exists!', 'warning')
+        # Check if the user already has 5 tags
+        user_tags = Tag.query.filter_by(user_id=current_user.id).count()
+        if user_tags >= 5:
+            flash('You can only have up to 5 tags.', 'warning')
         else:
-            new_tag = Tag(name=tag_name, user_id=current_user.id)
-            db.session.add(new_tag)
-            db.session.commit()
-            flash('Tag added successfully!', 'success')
+            # Check if tag already exists for this user
+            existing_tag = Tag.query.filter_by(user_id=current_user.id, name=tag_name).first()
+            if existing_tag:
+                flash('Tag already exists!', 'warning')
+            else:
+                new_tag = Tag(name=tag_name, user_id=current_user.id)
+                db.session.add(new_tag)
+                db.session.commit()
+                flash('Tag added successfully!', 'success')
     return redirect(url_for('profile'))
 
 @app.route('/delete_tag/<int:tag_id>')
