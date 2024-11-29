@@ -47,6 +47,20 @@ class HabitAPI {
             throw error;
         }
     }
+
+    static async updateHabitName(habitId, newName) {
+        try {
+            const response = await fetch(`/update_habit_name/${habitId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating habit name:', error);
+            throw error;
+        }
+    }
 }
 
 // Main HabitTracker class to manage habit tracking functionality
@@ -354,6 +368,53 @@ class FilterManager {
     }
 }
 
+// Habit Name Editor for handling inline name editing
+class HabitNameEditor {
+    constructor() {
+        this.initializeEventListeners();
+    }
+
+    initializeEventListeners() {
+        document.querySelectorAll('.habit-name').forEach(nameElement => {
+            nameElement.addEventListener('blur', () => this.handleNameEdit(nameElement));
+            nameElement.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    nameElement.blur();
+                }
+                if (e.key === 'Escape') {
+                    nameElement.textContent = nameElement.dataset.originalName;
+                    nameElement.blur();
+                }
+            });
+        });
+    }
+
+    async handleNameEdit(nameElement) {
+        const newName = nameElement.textContent.trim();
+        const originalName = nameElement.dataset.originalName;
+        const habitId = nameElement.closest('.habit-card').dataset.habitId;
+
+        if (newName === originalName || !newName) {
+            nameElement.textContent = originalName;
+            return;
+        }
+
+        try {
+            const response = await HabitAPI.updateHabitName(habitId, newName);
+            if (response.success) {
+                nameElement.dataset.originalName = newName;
+            } else {
+                nameElement.textContent = originalName;
+                console.error('Failed to update habit name');
+            }
+        } catch (error) {
+            nameElement.textContent = originalName;
+            console.error('Error updating habit name:', error);
+        }
+    }
+}
+
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize habit trackers
@@ -361,11 +422,14 @@ document.addEventListener('DOMContentLoaded', () => {
         new HabitTracker(tracker);
     });
 
-    // Initialize habit input
+    // Initialize habit input manager
     new HabitInputManager();
 
     // Initialize filter manager
     new FilterManager();
+
+    // Initialize habit name editor
+    new HabitNameEditor();
 
     // Initialize delete buttons
     document.querySelectorAll('.delete-btn').forEach(button => {

@@ -599,6 +599,25 @@ def update_habit_tags():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/update_habit_name/<int:habit_id>', methods=['POST'])
+@login_required
+def update_habit_name(habit_id):
+    try:
+        data = request.get_json()
+        new_name = data.get('name')
+        
+        if not new_name:
+            return jsonify({'success': False, 'error': 'Name cannot be empty'}), 400
+            
+        habit = Habit.query.get_or_404(habit_id)
+        habit.name = new_name
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.context_processor
 def inject_theme():
     return dict(theme='light')

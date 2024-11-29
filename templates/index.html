@@ -75,7 +75,7 @@
             {% for habit in habits %}
             <div class="habit-card" data-habit-id="{{ habit.id }}">
                 <div class="habit-header">
-                    <h3>{{ habit.name }}</h3>
+                    <h3 class="habit-name" contenteditable="true" data-original-name="{{ habit.name }}">{{ habit.name }}</h3>
                     <div class="habit-actions">
                         <button class="btn btn-secondary add-tag-btn" data-bs-toggle="modal" data-bs-target="#tagModal" data-habit-id="{{ habit.id }}">+Tag</button>
                         <span class="streak-badge">

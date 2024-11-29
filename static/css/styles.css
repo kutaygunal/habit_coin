@@ -297,3 +297,41 @@ input:disabled {
     margin-right: 4px;
     vertical-align: middle;
 }
+
+/* Editable habit name styles */
+.habit-name {
+    padding: 4px 8px;
+    margin: -4px -8px;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    cursor: pointer;
+}
+
+.habit-name[contenteditable="true"] {
+    outline: none;
+    border: none;
+}
+
+.habit-name:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-radius: 6px;
+}
+
+.habit-name[contenteditable="true"]:focus {
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+    border-radius: 6px;
+    box-shadow: 0 0 0 2px rgba(var(--bs-primary-rgb), 0.1);
+}
+
+.habit-name::after {
+    content: '✎';
+    opacity: 0;
+    font-size: 0.8em;
+    margin-left: 8px;
+    color: var(--bs-primary);
+    transition: opacity 0.2s ease-in-out;
+}
+
+.habit-name:hover::after {
+    opacity: 0.6;
+}
