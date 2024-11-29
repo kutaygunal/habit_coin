@@ -57,6 +57,12 @@ A modern web application for tracking daily habits and building consistent routi
 - Local model: `smollm2:1.7b-instruct-q4_0`
 - Generate concise and motivating descriptions for habits
 
+### Tag System
+- Implemented a comprehensive tag system for habits
+- Users can now add, edit, and remove tags associated with their habits
+- Enhanced filtering capabilities by tags
+- Improved UI for managing tags
+
 ### Security Features
 - Password hashing with bcrypt
 - User authentication required for all routes
