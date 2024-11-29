@@ -41,6 +41,7 @@
                 <div class="habit-header">
                     <h3>{{ habit.name }}</h3>
                     <div class="habit-actions">
+                        <button class="btn btn-secondary add-tag-btn" data-bs-toggle="modal" data-bs-target="#tagModal">+Tag</button>
                         <span class="streak-badge">
                             <i class="fas fa-fire"></i>
                             <span class="streak-count">0</span> days
@@ -90,6 +91,40 @@
                 </div>
             </div>
             {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Tag Selection Modal -->
+<div class="modal fade" id="tagModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Tags</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="tag-selection-form">
+                    <div class="tags-container">
+                        {% if tags %}
+                            {% for tag in tags %}
+                            <div class="d-inline-flex align-items-center me-2 mb-2 tag-item-modal">
+                                <input type="checkbox" class="btn-check" id="tag{{ tag.id }}" value="{{ tag.id }}" autocomplete="off">
+                                <label class="btn" for="tag{{ tag.id }}">
+                                    {{ tag.name }}
+                                </label>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No tags available. Create tags in your profile page.</p>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
         </div>
     </div>
 </div>
