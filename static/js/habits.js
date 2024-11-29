@@ -286,6 +286,78 @@ class HabitInputManager {
     }
 }
 
+// Filter Manager for handling habit filtering functionality
+class FilterManager {
+    constructor() {
+        this.searchInput = document.querySelector('.search-box input');
+        this.tagCheckboxes = document.querySelectorAll('.form-check-input');
+        this.clearButton = document.querySelector('.clear-filter-btn');
+        this.habitCards = document.querySelectorAll('.habit-card');
+        
+        this.initializeEvents();
+    }
+
+    initializeEvents() {
+        // Clear button click handler
+        if (this.clearButton) {
+            this.clearButton.addEventListener('click', () => {
+                console.log('Clear button clicked'); // Debug log
+                this.clearFilters();
+            });
+        }
+
+        // Search input handler
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', () => this.applyFilters());
+        }
+
+        // Tag checkbox handlers
+        this.tagCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => this.applyFilters());
+        });
+    }
+
+    clearFilters() {
+        console.log('Clearing filters'); // Debug log
+        
+        // Clear search input
+        if (this.searchInput) {
+            this.searchInput.value = '';
+        }
+
+        // Uncheck all tag checkboxes
+        this.tagCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+
+        // Show all habits
+        this.applyFilters();
+    }
+
+    applyFilters() {
+        const searchText = this.searchInput.value.toLowerCase();
+        const selectedTags = Array.from(this.tagCheckboxes)
+            .filter(cb => cb.checked)
+            .map(cb => cb.id.replace('tag', ''));
+
+        this.habitCards.forEach(card => {
+            const habitName = card.querySelector('h3').textContent.toLowerCase();
+            const habitTags = Array.from(card.querySelectorAll('.habit-tag'))
+                .map(tag => tag.closest('.habit-tag').textContent.trim());
+            
+            const matchesSearch = !searchText || habitName.includes(searchText);
+            const matchesTags = selectedTags.length === 0 || 
+                selectedTags.every(tagId => {
+                    const tagElement = document.querySelector(`label[for="tag${tagId}"] .badge`);
+                    return tagElement && habitTags.includes(tagElement.textContent.trim());
+                });
+
+            // Show card only if it matches both search and tag filters
+            card.style.display = (matchesSearch && matchesTags) ? '' : 'none';
+        });
+    }
+}
+
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize habit trackers
@@ -295,6 +367,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize habit input
     new HabitInputManager();
+
+    // Initialize filter manager
+    new FilterManager();
 
     // Initialize delete buttons
     document.querySelectorAll('.delete-btn').forEach(button => {
