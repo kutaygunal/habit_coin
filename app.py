@@ -640,6 +640,18 @@ def update_habit_name(habit_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/feed')
+@login_required
+def feed():
+    # For now, return a simple template indicating this feature is coming soon
+    return render_template('feed.html')
+
+@app.route('/reports')
+@login_required
+def reports():
+    # For now, return a simple template indicating this feature is coming soon
+    return render_template('reports.html')
+
 @app.context_processor
 def inject_theme():
     return dict(theme='light')
