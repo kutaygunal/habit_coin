@@ -287,3 +287,13 @@ input:disabled {
 .habit-tag .remove-tag:hover {
     opacity: 1;
 }
+
+/* Profile photo icon styles */
+.profile-photo-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 4px;
+    vertical-align: middle;
+}

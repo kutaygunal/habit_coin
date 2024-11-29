@@ -22,7 +22,11 @@
             <ul class="navbar-nav">
                 <li class="nav-item">
                     <a href="{{ url_for('profile') }}" class="nav-link">
-                        <i class="fas fa-user"></i>
+                        {% if current_user.profile_photo != 'default.png' %}
+                            <img src="{{ url_for('static', filename='profile_photos/' + current_user.profile_photo) }}" alt="Profile" class="profile-photo-icon">
+                        {% else %}
+                            <i class="fas fa-user"></i>
+                        {% endif %}
                         Profile
                     </a>
                 </li>
