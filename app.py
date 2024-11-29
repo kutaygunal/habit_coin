@@ -11,6 +11,8 @@ import time
 from calendar import monthrange
 import requests
 import logging
+import re
+
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -74,6 +76,24 @@ class Tag(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     color = db.Column(db.String(7), nullable=False, default='#007bff')  # Default Bootstrap primary color
 
+    # Function to remove emojis
+def remove_emojis(text):
+    emoji_pattern = re.compile(
+        "[\U0001F600-\U0001F64F"  # Emoticons
+        "\U0001F300-\U0001F5FF"  # Symbols & Pictographs
+        "\U0001F680-\U0001F6FF"  # Transport & Map Symbols
+        "\U0001F700-\U0001F77F"  # Alchemical Symbols
+        "\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+        "\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+        "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+        "\U0001FA00-\U0001FA6F"  # Chess Symbols
+        "\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+        "\U00002702-\U000027B0"  # Dingbats
+        "\U000024C2-\U0001F251"  # Enclosed Characters
+        "]+", flags=re.UNICODE
+    )
+    return emoji_pattern.sub(r'', text)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -95,7 +115,9 @@ def generate_description():
     
     try:
         # Prepare the prompt for the model
-        prompt = f"Generate a concise and motivating description for a habit named '{habit_name}'. Keep it under 50 characters."
+
+        cleaned_name =remove_emojis(habit_name)
+        prompt = f"Generate a concise and motivating description for a habit named '{cleaned_name}'. Keep it under 40 characters"
         logger.info(f'Generated prompt: {prompt}')
         
         # Call Ollama API
