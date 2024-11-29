@@ -37,10 +37,65 @@
     <!-- Main Content -->
     <div class="main-content">
         <div class="container">
-            <div class="coming-soon-container text-center">
-                <i class="fas fa-stream coming-soon-icon"></i>
-                <h2>Feed Coming Soon</h2>
-                <p>We're working on bringing you a social feed where you can share your habit progress and interact with others!</p>
+            <div class="feed-container">
+                {% if activities %}
+                    {% for activity in activities %}
+                        <div class="feed-card">
+                            <div class="feed-card-header">
+                                <div class="user-info">
+                                    <img src="{{ url_for('static', filename='profile_photos/' + activity.user.profile_photo) }}" alt="User Avatar" class="user-avatar">
+                                    <div class="user-details">
+                                        <h4 class="user-name">{{ activity.user.username }}</h4>
+                                        <span class="timestamp">{{ activity.created_at|timesince }}</span>
+                                    </div>
+                                </div>
+                                <div class="activity-type">
+                                    {% if activity.activity_type == 'new_habit' %}
+                                        <span class="badge bg-primary">
+                                            <i class="fas fa-plus-circle"></i> New Habit
+                                        </span>
+                                    {% elif activity.activity_type == 'completed' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Completed
+                                        </span>
+                                    {% elif activity.activity_type == 'streak' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-fire"></i> Streak
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="feed-card-content">
+                                {% if activity.activity_type == 'new_habit' %}
+                                    <p class="activity-description">Started a new habit: <strong>"{{ activity.details.name }}"</strong></p>
+                                    {% if activity.details.description %}
+                                        <p class="habit-description">{{ activity.details.description }}</p>
+                                    {% endif %}
+                                {% elif activity.activity_type == 'completed' %}
+                                    <p class="activity-description">Completed <strong>"{{ activity.details.habit_name }}"</strong></p>
+                                    <div class="streak-info">
+                                        <i class="fas fa-fire text-warning"></i>
+                                        <span>Current streak: {{ activity.details.streak }} days</span>
+                                    </div>
+                                {% elif activity.activity_type == 'streak' %}
+                                    <p class="activity-description">🎉 Achieved {{ activity.details.streak }} day streak in <strong>"{{ activity.details.habit_name }}"</strong>!</p>
+                                    <div class="streak-celebration">
+                                        <div class="streak-indicator">
+                                            <i class="fas fa-fire"></i>
+                                            <span>{{ activity.details.streak }} Days</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-feed">
+                        <i class="fas fa-stream"></i>
+                        <h3>No Activities Yet</h3>
+                        <p>Start tracking your habits to see updates here!</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

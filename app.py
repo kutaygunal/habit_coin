@@ -53,6 +53,7 @@ class User(UserMixin, db.Model):
     profile_photo = db.Column(db.String(255), default='default.png')
     habits = db.relationship('Habit', backref='user', lazy=True)
     tags = db.relationship('Tag', backref='user', lazy=True)
+    activities = db.relationship('FeedActivity', backref='user', lazy=True)
 
 class Habit(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -76,7 +77,17 @@ class Tag(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     color = db.Column(db.String(7), nullable=False, default='#007bff')  # Default Bootstrap primary color
 
-    # Function to remove emojis
+class FeedActivity(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    habit_id = db.Column(db.Integer, db.ForeignKey('habit.id'), nullable=True)
+    activity_type = db.Column(db.String(50), nullable=False)  # 'new_habit', 'completed', 'streak'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    details = db.Column(db.JSON)
+    
+    habit = db.relationship('Habit')
+
+# Function to remove emojis
 def remove_emojis(text):
     emoji_pattern = re.compile(
         "[\U0001F600-\U0001F64F"  # Emoticons
@@ -253,13 +264,23 @@ def index():
 @login_required
 def add_habit():
     name = request.form.get('name')
-    description = request.form.get('description')
+    description = request.form.get('description', '')
     
     if name:
-        new_habit = Habit(name=name, description=description, user_id=current_user.id)
-        db.session.add(new_habit)
+        habit = Habit(name=name, description=description, user_id=current_user.id)
+        db.session.add(habit)
+        
+        # Create feed activity for new habit
+        activity = FeedActivity(
+            user_id=current_user.id,
+            habit_id=habit.id,
+            activity_type='new_habit',
+            details={'name': name, 'description': description}
+        )
+        db.session.add(activity)
+        
         db.session.commit()
-    
+        flash('Habit added successfully!', 'success')
     return redirect(url_for('index'))
 
 @app.route('/toggle_habit', methods=['POST'])
@@ -298,8 +319,34 @@ def toggle_habit():
             )
             db.session.add(habit_log)
             
-        db.session.commit()
+            # Create feed activity for habit completion
+            streak = calculate_current_streak(habit_id)
+            if streak > 0:
+                activity = FeedActivity(
+                    user_id=current_user.id,
+                    habit_id=habit_id,
+                    activity_type='completed',
+                    details={
+                        'streak': streak,
+                        'habit_name': habit.name
+                    }
+                )
+                db.session.add(activity)
+                
+                # Add special activity for milestone streaks
+                if streak in [7, 30, 100, 365]:
+                    milestone_activity = FeedActivity(
+                        user_id=current_user.id,
+                        habit_id=habit_id,
+                        activity_type='streak',
+                        details={
+                            'streak': streak,
+                            'habit_name': habit.name
+                        }
+                    )
+                    db.session.add(milestone_activity)
         
+        db.session.commit()
         return jsonify({
             'success': True,
             'completed': habit_log.completed
@@ -643,14 +690,37 @@ def update_habit_name(habit_id):
 @app.route('/feed')
 @login_required
 def feed():
-    # For now, return a simple template indicating this feature is coming soon
-    return render_template('feed.html')
+    # Get feed activities ordered by creation date
+    activities = FeedActivity.query.order_by(FeedActivity.created_at.desc()).limit(50).all()
+    return render_template('feed.html', activities=activities)
 
 @app.route('/reports')
 @login_required
 def reports():
     # For now, return a simple template indicating this feature is coming soon
     return render_template('reports.html')
+
+@app.template_filter('timesince')
+def timesince(dt):
+    now = datetime.utcnow()
+    diff = now - dt
+    
+    if diff.days > 365:
+        years = diff.days // 365
+        return f"{years}y ago"
+    elif diff.days > 30:
+        months = diff.days // 30
+        return f"{months}mo ago"
+    elif diff.days > 0:
+        return f"{diff.days}d ago"
+    elif diff.seconds > 3600:
+        hours = diff.seconds // 3600
+        return f"{hours}h ago"
+    elif diff.seconds > 60:
+        minutes = diff.seconds // 60
+        return f"{minutes}m ago"
+    else:
+        return "just now"
 
 @app.context_processor
 def inject_theme():
