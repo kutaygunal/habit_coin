@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Initializing...');
+    
     // Initialize habit autocomplete
     initializeHabitAutocomplete();
 
@@ -7,6 +9,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize delete functionality
     initializeDeleteButtons();
+
+    // Initialize tag functionality
+    console.log('Initializing tag management...');
+    initializeTagManagement();
+    console.log('Tag management initialized');
 
     // Add click handlers for all checkboxes
     document.querySelectorAll('.checkbox').forEach(checkbox => {
@@ -253,4 +260,114 @@ async function initializeHabitAutocomplete() {
             dropdown.style.display = 'none';
         }
     });
+}
+
+function initializeTagManagement() {
+    console.log('Inside initializeTagManagement');
+    let currentHabitId = null;
+    const tagModal = document.getElementById('tagModal');
+    const saveChangesBtn = document.getElementById('saveTagChanges');
+
+    console.log('tagModal:', tagModal);
+    console.log('saveChangesBtn:', saveChangesBtn);
+
+    if (!saveChangesBtn) {
+        console.error('Save changes button not found!');
+        return;
+    }
+
+    // When tag modal is opened
+    tagModal.addEventListener('show.bs.modal', function(event) {
+        console.log('Modal show event triggered');
+        const button = event.relatedTarget;
+        currentHabitId = button.dataset.habitId;
+        console.log('Modal opened for habit:', currentHabitId);
+        
+        // Reset checkboxes
+        tagModal.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+
+        // Check boxes for existing tags on the habit
+        const habitTags = document.querySelector(`.habit-card[data-habit-id="${currentHabitId}"] .habit-tags`);
+        if (habitTags) {
+            const existingTags = habitTags.querySelectorAll('.habit-tag');
+            existingTags.forEach(tag => {
+                const tagId = tag.dataset.tagId;
+                const checkbox = tagModal.querySelector(`#tag${tagId}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+    });
+
+    // Save changes button click handler
+    console.log('Adding click handler to save button');
+    saveChangesBtn.addEventListener('click', function(e) {
+        console.log('Save button clicked!');
+        e.preventDefault();
+        
+        console.log('Save changes clicked for habit:', currentHabitId);
+        
+        const selectedTags = [];
+        const checkboxes = tagModal.querySelectorAll('input[type="checkbox"]:checked');
+        console.log('Found checked checkboxes:', checkboxes.length);
+        
+        checkboxes.forEach(checkbox => {
+            const tagId = checkbox.value;
+            const tagName = checkbox.nextElementSibling.textContent.trim();
+            const tagLabel = checkbox.nextElementSibling;
+            const tagColor = window.getComputedStyle(tagLabel).backgroundColor;
+            
+            selectedTags.push({
+                id: tagId,
+                name: tagName,
+                color: tagColor
+            });
+        });
+
+        console.log('Selected tags:', selectedTags);
+
+        // Update habit tags display
+        const habitTags = document.querySelector(`.habit-card[data-habit-id="${currentHabitId}"] .habit-tags`);
+        if (!habitTags) {
+            console.error('Habit tags container not found for habit:', currentHabitId);
+            return;
+        }
+
+        habitTags.innerHTML = '';
+        
+        selectedTags.forEach(tag => {
+            const tagElement = document.createElement('div');
+            tagElement.className = 'habit-tag';
+            tagElement.dataset.tagId = tag.id;
+            tagElement.style.backgroundColor = tag.color;
+            tagElement.innerHTML = `
+                ${tag.name}
+                <span class="remove-tag">×</span>
+            `;
+            
+            // Add remove tag functionality
+            tagElement.querySelector('.remove-tag').addEventListener('click', function(e) {
+                e.stopPropagation();
+                tagElement.remove();
+                
+                // Uncheck the corresponding checkbox in modal
+                const checkbox = tagModal.querySelector(`#tag${tag.id}`);
+                if (checkbox) checkbox.checked = false;
+            });
+            
+            habitTags.appendChild(tagElement);
+        });
+
+        // Close modal
+        const modalInstance = bootstrap.Modal.getInstance(tagModal);
+        if (modalInstance) {
+            modalInstance.hide();
+        } else {
+            console.error('Modal instance not found');
+            $(tagModal).modal('hide'); // Fallback
+        }
+    });
+    
+    console.log('Tag management initialization complete');
 }

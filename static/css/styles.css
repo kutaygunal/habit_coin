@@ -189,7 +189,7 @@ input:disabled {
 }
 
 .tag-item:nth-of-type(5n+4) {
-    background-color: #2196f3;  /* Blue */
+    background-color: #9c27b0;  /* Purple */
     color: white;
 }
 
@@ -214,7 +214,7 @@ input:disabled {
 }
 
 .tag-item-modal:nth-of-type(5n+4) .btn {
-    background-color: #2196f3;  /* Blue */
+    background-color: #9c27b0;  /* Purple */
     color: white;
 }
 
@@ -256,4 +256,34 @@ input:disabled {
 .btn-check:checked + .btn {
     opacity: 0.8;
     color: white;
+}
+
+/* Habit tag styles */
+.habit-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 0 10px;
+}
+
+.habit-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: white;
+    cursor: default;
+}
+
+.habit-tag .remove-tag {
+    margin-left: 6px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.habit-tag .remove-tag:hover {
+    opacity: 1;
 }

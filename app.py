@@ -190,7 +190,8 @@ def logout():
 def index():
     try:
         habits = Habit.query.filter_by(user_id=current_user.id).all()
-        today = datetime.now()  # Get full datetime object
+        tags = Tag.query.filter_by(user_id=current_user.id).all()  # Get user's tags
+        today = datetime.now()
         
         # Get completion status for each habit
         for habit in habits:
@@ -209,8 +210,9 @@ def index():
             ]
             
         return render_template('index.html', 
-                             habits=habits, 
-                             today=today.date(),  # Convert to date for template
+                             habits=habits,
+                             tags=tags,  # Pass tags to template
+                             today=today.date(),
                              timedelta=timedelta)
     except Exception as e:
         app.logger.error(f"Error in index route: {str(e)}")
