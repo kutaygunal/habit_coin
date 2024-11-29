@@ -834,26 +834,6 @@ body {
     display: block;
 }
 
-.tag-item:nth-of-type(5n+1) {
-    background-color: #ff9f40;  /* Orange */
-}
-
-.tag-item:nth-of-type(5n+2) {
-    background-color: #ffeb3b;  /* Yellow */
-}
-
-.tag-item:nth-of-type(5n+3) {
-    background-color: #f44336;  /* Red */
-}
-
-.tag-item:nth-of-type(5n+4) {
-    background-color: #2196f3;  /* Blue */
-}
-
-.tag-item:nth-of-type(5n+5) {
-    background-color: #4caf50;  /* Green */
-}
-
 .tag-item {
     display: inline-flex;
     align-items: center;
@@ -861,25 +841,40 @@ body {
     border-radius: 16px;
     margin: 2px;
     font-size: 0.9rem;
-    color: white;
-}
-
-.tag-item:nth-of-type(5n+2) {
-    color: black;  /* Better contrast for yellow background */
-}
-
-.tag-item:nth-of-type(5n+2) a {
-    color: black !important;  /* Better contrast for yellow background */
 }
 
 .tag-item a {
-    color: white;
     opacity: 0.8;
     transition: opacity 0.2s;
 }
 
 .tag-item a:hover {
     opacity: 1;
+}
+
+.tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.tag-item-modal .btn {
+    padding: 4px 12px;
+    border-radius: 16px;
+    margin: 2px;
+    font-size: 0.9rem;
+    border: none;
+    transition: opacity 0.2s;
+}
+
+.tag-item-modal .btn:hover {
+    opacity: 0.9;
+}
+
+.tag-item-modal .btn-check:checked + .btn {
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
 .delete-btn {
@@ -909,6 +904,47 @@ body {
 
 .delete-btn:hover i {
     color: #ef4444;
+}
+
+/* Tag styles */
+.habit-tags {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.habit-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.9rem;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.habit-tag:hover {
+    opacity: 0.9;
+}
+
+/* Modal tag styles */
+.tag-item-modal .btn {
+    padding: 4px 12px;
+    border-radius: 16px;
+    margin: 2px;
+    font-size: 0.9rem;
+    border: none;
+    transition: opacity 0.2s;
+}
+
+.tag-item-modal .btn:hover {
+    opacity: 0.9;
+}
+
+.tag-item-modal .btn-check:checked + .btn {
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
 @media (max-width: 768px) {

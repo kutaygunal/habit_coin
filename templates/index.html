@@ -51,7 +51,11 @@
                         </button>
                     </div>
                 </div>
-                <div class="habit-tags"></div>
+                <div class="habit-tags">
+                    {% for tag in habit.tags %}
+                    <div class="habit-tag" style="background-color: {{ tag.color }}">{{ tag.name }}</div>
+                    {% endfor %}
+                </div>
                 {% if habit.description %}
                 <p class="habit-description">{{ habit.description }}</p>
                 {% endif %}
@@ -110,7 +114,7 @@
                             {% for tag in tags %}
                             <div class="d-inline-flex align-items-center me-2 mb-2 tag-item-modal">
                                 <input type="checkbox" class="btn-check" id="tag{{ tag.id }}" value="{{ tag.id }}" autocomplete="off">
-                                <label class="btn" for="tag{{ tag.id }}">
+                                <label class="btn" for="tag{{ tag.id }}" style="background-color: {{ tag.color }}; color: white;">
                                     {{ tag.name }}
                                 </label>
                             </div>

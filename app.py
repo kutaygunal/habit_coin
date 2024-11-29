@@ -35,6 +35,12 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message_category = 'info'
 
+# Association table for habit-tag relationship
+habit_tags = db.Table('habit_tags',
+    db.Column('habit_id', db.Integer, db.ForeignKey('habit.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id'), primary_key=True)
+)
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
@@ -51,7 +57,9 @@ class Habit(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Changed to nullable=True temporarily
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    tags = db.relationship('Tag', secondary=habit_tags, lazy='subquery',
+        backref=db.backref('habits', lazy=True))
 
 class HabitLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -366,7 +374,12 @@ def manage_tags():
             if existing_tag:
                 flash('Tag already exists!', 'warning')
             else:
-                new_tag = Tag(name=tag_name, user_id=current_user.id)
+                # Define the color cycle
+                colors = ['#ff9f40', '#ffc107', '#f44336', '#9c27b0', '#4caf50']
+                # Get the color based on the current number of tags (0-based index)
+                color = colors[user_tags % len(colors)]
+                
+                new_tag = Tag(name=tag_name, user_id=current_user.id, color=color)
                 db.session.add(new_tag)
                 db.session.commit()
                 flash('Tag added successfully!', 'success')
@@ -556,6 +569,35 @@ def get_habit_data(habit_id, year, month):
             'success': False,
             'error': str(e)
         }), 500
+
+@app.route('/update_habit_tags', methods=['POST'])
+@login_required
+def update_habit_tags():
+    try:
+        data = request.json
+        habit_id = data.get('habit_id')
+        tag_ids = data.get('tag_ids', [])
+        
+        habit = Habit.query.get_or_404(habit_id)
+        
+        # Verify habit belongs to current user
+        if habit.user_id != current_user.id:
+            return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+        
+        # Clear existing tags
+        habit.tags = []
+        
+        # Add selected tags
+        for tag_id in tag_ids:
+            tag = Tag.query.get(tag_id)
+            if tag and tag.user_id == current_user.id:
+                habit.tags.append(tag)
+        
+        db.session.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.context_processor
 def inject_theme():

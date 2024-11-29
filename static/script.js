@@ -240,14 +240,16 @@ function initializeTagManagement() {
         console.log('Save changes clicked for habit:', currentHabitId);
         
         const selectedTags = [];
+        const tagIds = [];
         const checkboxes = tagModal.querySelectorAll('input[type="checkbox"]:checked');
         console.log('Found checked checkboxes:', checkboxes.length);
         
         checkboxes.forEach(checkbox => {
             const tagId = checkbox.value;
-            const tagName = checkbox.nextElementSibling.textContent.trim();
+            tagIds.push(tagId);
             const tagLabel = checkbox.nextElementSibling;
-            const tagColor = window.getComputedStyle(tagLabel).backgroundColor;
+            const tagName = tagLabel.textContent.trim();
+            const tagColor = tagLabel.style.backgroundColor;
             
             selectedTags.push({
                 id: tagId,
@@ -258,46 +260,54 @@ function initializeTagManagement() {
 
         console.log('Selected tags:', selectedTags);
 
-        // Update habit tags display
-        const habitTags = document.querySelector(`.habit-card[data-habit-id="${currentHabitId}"] .habit-tags`);
-        if (!habitTags) {
-            console.error('Habit tags container not found for habit:', currentHabitId);
-            return;
-        }
+        // Send update to server
+        fetch('/update_habit_tags', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                habit_id: currentHabitId,
+                tag_ids: tagIds
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update habit tags display
+                const habitTags = document.querySelector(`.habit-card[data-habit-id="${currentHabitId}"] .habit-tags`);
+                if (!habitTags) {
+                    console.error('Habit tags container not found for habit:', currentHabitId);
+                    return;
+                }
 
-        habitTags.innerHTML = '';
-        
-        selectedTags.forEach(tag => {
-            const tagElement = document.createElement('div');
-            tagElement.className = 'habit-tag';
-            tagElement.dataset.tagId = tag.id;
-            tagElement.style.backgroundColor = tag.color;
-            tagElement.innerHTML = `
-                ${tag.name}
-                <span class="remove-tag">×</span>
-            `;
-            
-            // Add remove tag functionality
-            tagElement.querySelector('.remove-tag').addEventListener('click', function(e) {
-                e.stopPropagation();
-                tagElement.remove();
+                habitTags.innerHTML = '';
                 
-                // Uncheck the corresponding checkbox in modal
-                const checkbox = tagModal.querySelector(`#tag${tag.id}`);
-                if (checkbox) checkbox.checked = false;
-            });
-            
-            habitTags.appendChild(tagElement);
-        });
+                selectedTags.forEach(tag => {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'habit-tag';
+                    tagElement.dataset.tagId = tag.id;
+                    tagElement.style.backgroundColor = tag.color;
+                    tagElement.textContent = tag.name;
+                    
+                    habitTags.appendChild(tagElement);
+                });
 
-        // Close modal
-        const modalInstance = bootstrap.Modal.getInstance(tagModal);
-        if (modalInstance) {
-            modalInstance.hide();
-        } else {
-            console.error('Modal instance not found');
-            $(tagModal).modal('hide'); // Fallback
-        }
+                // Close modal
+                const modalInstance = bootstrap.Modal.getInstance(tagModal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                } else {
+                    console.error('Modal instance not found');
+                    $(tagModal).modal('hide'); // Fallback
+                }
+            } else {
+                console.error('Failed to update tags:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating tags:', error);
+        });
     });
     
     console.log('Tag management initialization complete');

@@ -9,6 +9,10 @@ A modern web application for tracking daily habits and building consistent routi
 - Track habit completion
 - View habit statistics and streaks
 - Delete unwanted habits
+- Tag management for habits
+  * Add custom tags to habits
+  * Filter habits by tags
+  * Organize habits by categories
 
 ### User Management
 - User registration and authentication
