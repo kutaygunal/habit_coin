@@ -23,6 +23,19 @@ function deleteActivity(activityId) {
                 const feedCard = document.querySelector(`.feed-card[data-activity-id="${activityId}"]`);
                 if (feedCard) {
                     feedCard.remove();
+                    
+                    // Check if there are any remaining feed cards
+                    const remainingCards = document.querySelectorAll('.feed-card');
+                    if (remainingCards.length === 0) {
+                        const feedContainer = document.querySelector('.feed-container');
+                        feedContainer.innerHTML = `
+                            <div class="empty-feed">
+                                <i class="fas fa-stream"></i>
+                                <h3>No Activities Yet</h3>
+                                <p>Start tracking your habits to see updates here!</p>
+                            </div>
+                        `;
+                    }
                 }
             } else {
                 alert('Failed to delete activity');
