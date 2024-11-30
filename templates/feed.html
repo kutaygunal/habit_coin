@@ -5,17 +5,22 @@
     .delete-activity-btn {
         background: none;
         border: none;
-        color: #000;
-        padding: 4px 8px;
+        color: var(--text-secondary);
+        padding: 0.5rem;
+        margin-left: 1rem;
+        border-radius: 0.5rem;
         cursor: pointer;
-        transition: color 0.2s;
-        margin-left: 8px;
-        display: inline-flex;
+        transition: all 0.2s ease;
+        display: flex;
         align-items: center;
+        justify-content: center;
     }
     .delete-activity-btn:hover {
-        color: #444;
+        color: #ef4444;
+        background-color: #fee2e2;
+        transform: scale(1.1);
     }
+
     .activity-type {
         display: flex;
         align-items: center;

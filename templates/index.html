@@ -110,26 +110,25 @@
                 <div class="habit-card" data-habit-id="{{ habit.id }}">
                     <div class="habit-header">
                         <h3 class="habit-name" contenteditable="true" data-original-name="{{ habit.name }}">{{ habit.name }}</h3>
-                        <div class="habit-actions">
-                            <button class="btn btn-secondary add-tag-btn" data-bs-toggle="modal" data-bs-target="#tagModal" data-habit-id="{{ habit.id }}">+Tag</button>
-                            <span class="streak-badge">
-                                <i class="fas fa-fire"></i>
-                                <span class="streak-count">0</span> days
-                            </span>
-                            <button class="delete-btn" data-habit-id="{{ habit.id }}" title="Delete Habit">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
+                        <button class="delete-btn" data-habit-id="{{ habit.id }}" title="Delete Habit">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                     <div class="habit-tags">
                         {% for tag in habit.tags %}
                         <div class="habit-tag" data-tag-id="{{ tag.id }}" style="background-color: {{ tag.color }}">{{ tag.name }}</div>
                         {% endfor %}
                     </div>
+                    <div class="habit-actions">
+                        <button class="btn btn-secondary add-tag-btn" data-bs-toggle="modal" data-bs-target="#tagModal" data-habit-id="{{ habit.id }}">+Tag</button>
+                        <span class="streak-badge">
+                            <i class="fas fa-fire"></i>
+                            <span class="streak-count">0</span> days
+                        </span>
+                    </div>
                     {% if habit.description %}
                     <p class="habit-description">{{ habit.description }}</p>
                     {% endif %}
-                    
                     <div class="habit-tracker" data-habit-id="{{ habit.id }}" data-current-month="{{ today.month }}" data-current-year="{{ today.year }}">
                         <div class="month-header">
                             <button class="month-nav prev-month"><i class="fas fa-chevron-left"></i></button>
