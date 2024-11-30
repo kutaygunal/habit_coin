@@ -319,34 +319,8 @@ def toggle_habit():
             )
             db.session.add(habit_log)
             
-            # Create feed activity for habit completion
-            streak = calculate_current_streak(habit_id)
-            if streak > 0:
-                activity = FeedActivity(
-                    user_id=current_user.id,
-                    habit_id=habit_id,
-                    activity_type='completed',
-                    details={
-                        'streak': streak,
-                        'habit_name': habit.name
-                    }
-                )
-                db.session.add(activity)
-                
-                # Add special activity for milestone streaks
-                if streak in [7, 30, 100, 365]:
-                    milestone_activity = FeedActivity(
-                        user_id=current_user.id,
-                        habit_id=habit_id,
-                        activity_type='streak',
-                        details={
-                            'streak': streak,
-                            'habit_name': habit.name
-                        }
-                    )
-                    db.session.add(milestone_activity)
-        
         db.session.commit()
+        
         return jsonify({
             'success': True,
             'completed': habit_log.completed
