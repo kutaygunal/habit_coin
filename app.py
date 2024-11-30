@@ -674,6 +674,23 @@ def reports():
     # For now, return a simple template indicating this feature is coming soon
     return render_template('reports.html')
 
+@app.route('/delete_activity/<int:activity_id>', methods=['DELETE'])
+@login_required
+def delete_activity(activity_id):
+    activity = FeedActivity.query.get_or_404(activity_id)
+    
+    # Check if the activity belongs to the current user
+    if activity.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    try:
+        db.session.delete(activity)
+        db.session.commit()
+        return jsonify({'message': 'Activity deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.template_filter('timesince')
 def timesince(dt):
     now = datetime.utcnow()
